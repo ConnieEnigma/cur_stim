@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cargo",
+			"command": "build",
+			"args": [
+				"--bin",
+				"u5_example"
+			],
+			"problemMatcher": [
+				"$rustc"
+			],
+			"group": "build",
+			"label": "rust: cargo build",
+			"options": {
+				"env": {
+					"DEFMT_LOG": "info"
+				}
+			}
+		}
+	]
+}
