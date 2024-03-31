@@ -16,7 +16,7 @@ use embassy_usb::{
 };
 use futures::future::{join};
 
-use u5_lib::{*};
+use u5_lib::{gpio::{SDMMC2_CMD_PD7, SDMMC2_D0_PB14}, *};
 use u5_lib::clock::delay_ms;
 use u5_lib::com_interface::ComInterface;
 
@@ -34,48 +34,66 @@ fn panic(_info: &PanicInfo) -> ! {
 
 
 fn setup_camera() -> (gpio::GpioPort, i2c::I2c) {
-    clock::set_mco(gpio::GPIO_MCO_PA8, clock::Mcosel::HSI, clock::Mcopre::DIV2);    // clock. which use PA8 as clock output
-    let cam_down = gpio::PB0;
+    clock::set_mco(gpio::GPIO_MCO_PA8, clock::Mcosel::HSI, clock::Mcopre::DIV1);    // clock. which use PA8 as clock output
+    let cam_down = gpio::PD13;
     cam_down.setup();
     cam_down.set_high();
     cam_down.set_low();
     // wait for short time
-    delay_ms(1);
+    delay_ms(50);
     let mut i2c = i2c::I2c::new(i2c::I2cConfig::new(2, 100_000, gpio::I2C2_SDA_PF0, gpio::I2C2_SCL_PF1)).unwrap();
-    delay_ms(1);
+    // delay_ms(1);
     camera::setup_camera(&mut i2c);
     (cam_down, i2c)
 }
 
 fn setup_led() -> gpio::GpioPort {
-    let green: gpio::GpioPort = gpio::PD14;
+    let green: gpio::GpioPort = gpio::PD15;
     green.setup();
     green
 }
+fn setup_sd() -> sdmmc::SdInstance {
+    let mut sd = sdmmc::SdInstance::new( sdmmc::SDMMC2);    
+    sd.init(gpio::SDMMC2_CK_PD6, SDMMC2_CMD_PD7, SDMMC2_D0_PB14);
+    sd
+}
 
-#[embassy_executor::main]
-async fn main(spawner: Spawner) {
+// #[embassy_executor::main]
+#[task]
+async fn async_main(spawner: Spawner) {
     // clock::init_clock(true, false, clock::ClockFreqs::KernelFreq4Mhz);
-    clock::init_clock(true, false, clock::ClockFreqs::KernelFreq160Mhz);
-    let (cam_down, i2c) = setup_camera();
+    clock::init_clock(false, true, clock::ClockFreqs::KernelFreq160Mhz);
+    // let (cam_down, i2c) = setup_camera();
+    // cam_down.set_high();
+    delay_ms(200);
     defmt::info!("camera init finished!");
+    let sd = setup_sd();
+    defmt::info!("sd init finished!");
     let green = setup_led();
-    loop {
-        delay_ms(500);
-        green.toggle();
-    }
-
-    // spawner.spawn(btn()).unwrap();
-    // spawner.spawn(pwr::vddusb_monitor_up()).unwrap();
-    // spawner.spawn(usb_task()).unwrap();
+    spawner.spawn(btn()).unwrap();
+    spawner.spawn(pwr::vddusb_monitor_up()).unwrap();
+    spawner.spawn(usb_task()).unwrap();
+    // start emmc
 
 
     defmt::info!("usb init finished!");
     loop {
-        exti::EXTI13_PC13.wait_for_raising().await;
+        exti::EXTI2_PB2.wait_for_raising().await;
         green.toggle();
+        defmt::info!("exti2 triggered");
+        unsafe {defmt::info!("deep sleep flag: {}", low_power::REF_COUNT_DEEP);}
     }
 }
+
+use low_power::Executor;
+#[cortex_m_rt::entry]
+fn main() -> ! {
+    Executor::take().run(|spawner| {
+        // unwrap!(spawner.spawn(async_main(spawner)));
+        spawner.spawn(async_main(spawner)).unwrap();
+    });
+}
+
 
 
 #[embassy_executor::task]
