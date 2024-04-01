@@ -37,11 +37,18 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 fn setup_camera() -> (gpio::GpioPort, i2c::I2c) {
-    clock::set_mco(gpio::GPIO_MCO_PA8, clock::Mcosel::HSI, clock::Mcopre::DIV1); // clock. which use PA8 as clock output
     let cam_down = gpio::PD13;
     cam_down.setup();
+    let rst = gpio::PD12;
+    rst.setup();
     cam_down.set_high();
+    rst.set_low();
+    clock::set_mco(gpio::GPIO_MCO_PA8, clock::Mcosel::HSI48, clock::Mcopre::DIV2); // clock. which use PA8 as clock output
+    // cam_down.set_high();
+    delay_ms(5);
     cam_down.set_low();
+    delay_ms(5);
+    rst.set_high();
     // wait for short time
     delay_ms(50);
     let mut i2c = i2c::I2c::new(i2c::I2cConfig::new(
@@ -51,8 +58,10 @@ fn setup_camera() -> (gpio::GpioPort, i2c::I2c) {
         gpio::I2C2_SCL_PF1,
     ))
         .unwrap();
-    // delay_ms(1);
+    delay_ms(1);
+
     camera::setup_camera(&mut i2c);
+    // cam_down.set_high();
     (cam_down, i2c)
 }
 
@@ -94,8 +103,6 @@ async fn async_main(spawner: Spawner) {
     clock::init_clock(false, true, true, clock::ClockFreqs::KernelFreq160Mhz);
     // cam_down.set_high();
     delay_ms(200);
-    defmt::info!("camera init finished!");
-    defmt::info!("sd init finished!");
     let green = setup_led();
     spawner.spawn(btn()).unwrap();
     spawner.spawn(pwr::vddusb_monitor_up()).unwrap();
@@ -104,14 +111,30 @@ async fn async_main(spawner: Spawner) {
 
     let (cam_down, mut i2c, sd, dcmi) =
         clock::hclk_request(clock::ClockFreqs::KernelFreq160Mhz, || {
-            let (cam_down, i2c) = setup_camera();
             let sd = setup_sd();
+            defmt::info!("sd init finished!");
+            let (cam_down, i2c) = setup_camera();
+            defmt::info!("camera init finished!");
             let dcmi = set_dcmi();
             (cam_down, i2c, sd, dcmi)
         });
 
     defmt::info!("usb init finished!");
     let mut power_on = false;
+    // let mut green = gpio::PD10;
+    gpio::PD10.setup();
+    gpio::PD14.setup();
+    gpio::PD15.setup();
+    // set high 
+    gpio::PD10.set_high();
+    gpio::PD14.set_high();
+    gpio::PD15.set_high();
+    delay_ms(500);
+    gpio::PD10.set_low();
+    gpio::PD14.set_low();
+    gpio::PD15.set_low();    
+    
+
     loop {
         if !power_on {
             let val = POWER_SIGNAL.wait().await;
@@ -131,15 +154,16 @@ async fn async_main(spawner: Spawner) {
 
         // exti::EXTI2_PB2.wait_for_raising().await;
         // clock::init_clock(false, true, clock::ClockFreqs::KernelFreq160Mhz);
-        // clock::set_mco(gpio::GPIO_MCO_PA8, clock::Mcosel::HSI, clock::Mcopre::DIV1);    // clock. which use PA8 as clock output
         // delay_ms(1);
         // rtc::rtc_interrupt().await;
         green.toggle();
-        let mut pic_buf = [0u8; 700_000];
+        let mut pic_buf = [0u8; 1_600_000];
         // deep sleep is not allowed
         clock::hclk_request_async(clock::ClockFreqs::KernelFreq160Mhz, || async {
             low_power::run_no_deep_sleep_async(|| async {
+                defmt::info!("start capture, ########################");
                 camera::capture(&cam_down, &mut i2c, &dcmi, &mut pic_buf).await;
+                defmt::info!("finish capture, ########################");
                 camera::save_picture(&mut pic_buf, &sd).await;
                 defmt::info!("finish save picture, ########################");
             })
