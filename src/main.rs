@@ -61,7 +61,8 @@ fn setup_camera() -> (gpio::GpioPort, i2c::I2c) {
     delay_ms(1);
 
     camera::setup_camera(&mut i2c);
-    // cam_down.set_high();
+    delay_ms(500);
+    cam_down.set_high();
     (cam_down, i2c)
 }
 
