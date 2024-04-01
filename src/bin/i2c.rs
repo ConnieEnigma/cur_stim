@@ -31,7 +31,7 @@ fn main() -> ! {
 
 #[task]
 async fn async_main(_spawner: Spawner) {
-    clock::init_clock(true, false, clock::ClockFreqs::KernelFreq160Mhz);
+    clock::init_clock(true, true, false, clock::ClockFreqs::KernelFreq160Mhz);
     BLUE.setup();
     defmt::info!("setup led finished!");
     loop {

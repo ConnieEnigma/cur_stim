@@ -171,6 +171,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "eb_cmds"
+version = "0.1.0"
+
+[[package]]
 name = "embassy-executor"
 version = "0.5.0"
 source = "git+https://github.com/embassy-rs/embassy?rev=35f284e#35f284ec22848d7085e00f377136fd66067ca756"
@@ -603,7 +607,9 @@ dependencies = [
  "defmt",
  "defmt-itm",
  "defmt-rtt",
+ "eb_cmds",
  "embassy-executor",
+ "embassy-sync",
  "embassy-usb",
  "futures",
  "u5-lib",
