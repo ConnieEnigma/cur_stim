@@ -74,7 +74,7 @@ fn setup_led() -> gpio::GpioPort {
 
 fn setup_sd() -> sdmmc::SdInstance {
     let mut sd = sdmmc::SdInstance::new(sdmmc::SDMMC2);
-    sd.init(gpio::SDMMC2_CK_PD6, SDMMC2_CMD_PD7, SDMMC2_D0_PB14);
+    sd.init(gpio::SDMMC2_CK_PD6, SDMMC2_CMD_PD7, SDMMC2_D0_PB14, SDMMC2_D1_PB15, SDMMC2_D2_PB3, SDMMC2_D3_PB4, SDMMC2_D4_PB8, SDMMC2_D5_PB9, SDMMC2_D6_PC6, SDMMC2_D7_PC7);
     sd
 }
 
@@ -133,8 +133,8 @@ async fn async_main(spawner: Spawner) {
     delay_ms(500);
     gpio::PD10.set_low();
     gpio::PD14.set_low();
-    gpio::PD15.set_low();    
-    
+    gpio::PD15.set_low();
+
 
     loop {
         if !power_on {
@@ -185,6 +185,7 @@ fn main() -> ! {
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::signal::Signal;
+use u5_lib::gpio::{SDMMC2_D1_PB15, SDMMC2_D2_PB3, SDMMC2_D3_PB4, SDMMC2_D4_PB8, SDMMC2_D5_PB9, SDMMC2_D6_PC6, SDMMC2_D7_PC7};
 
 // static mut POWER_STATE: bool = false;
 static POWER_SIGNAL: Signal<CriticalSectionRawMutex, bool> = Signal::new();
