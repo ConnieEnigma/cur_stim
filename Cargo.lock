@@ -173,6 +173,7 @@ dependencies = [
 [[package]]
 name = "eb_cmds"
 version = "0.1.0"
+source = "git+ssh://gitea@git.ggeta.com:2002/guangzong/eb_cmds.git#49d7eaf9ecdfa207a1afb23abf73e6a8c8459ea7"
 
 [[package]]
 name = "embassy-executor"
@@ -523,6 +524,7 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 [[package]]
 name = "stm32-metapac"
 version = "15.0.0"
+source = "git+https://gitea.ggeta.com/guangzong/stm32-data-generated#a9f7568e7fb17705922cd5947523ee1869774234"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
@@ -579,6 +581,7 @@ dependencies = [
 [[package]]
 name = "u5-lib"
 version = "0.1.0"
+source = "git+ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git?branch=dev#85f674f6dbd42e04f34f4f51bbf557a35d87c183"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
