@@ -581,7 +581,7 @@ dependencies = [
 [[package]]
 name = "u5-lib"
 version = "0.1.0"
-source = "git+ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git?branch=dev#bc8db5f8e5b3119434beec539902ad507bfb61b6"
+source = "git+ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git?branch=dev#985cbf34c6d9e1fb75cf015f0bcdf8b693fd8b2d"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
@@ -606,9 +606,7 @@ version = "0.1.0"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
- "critical-section",
  "defmt",
- "defmt-itm",
  "defmt-rtt",
  "eb_cmds",
  "embassy-executor",

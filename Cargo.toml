@@ -14,24 +14,15 @@ git-fetch-with-cli = true
 
 [dependencies]
 # cortex-m = "0.7.0"
-cortex-m = { version = "0.7.7", features = [
-    "inline-asm",
-    "critical-section-single-core",
-]} 
-u5-lib = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git",features = [
-    "stm32u5a5qj",
-#   "memory-x",
-    # "stm32u575zi"
-    ], default-features = false, branch = "dev" }
+cortex-m = { version = "0.7.7"}
+u5-lib = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git",features = [ "stm32u5a5qj"], default-features = false, branch = "dev" }
 eb_cmds = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/eb_cmds.git"}
-critical-section = "1.1.2"
+#critical-section = "1.1.2"
 
 defmt = "0.3.6"
 defmt-rtt = { version = "0.4.0" }
-defmt-itm = { version = "0.3.0" }
-futures = { version = "0.3.17", default-features = false, fetures = [
-    "async-await",
-]}
+#defmt-itm = { version = "0.3.0" }
+futures = { version = "0.3.17", default-features = false, fetures = [ "async-await", ]}
 cortex-m-rt = { version = "0.7.3" }
 
 
@@ -48,13 +39,6 @@ rev = "35f284e"
 git = "https://github.com/embassy-rs/embassy"
 rev = "35f284e"
 
-
-
-
-
-# [dependencies.stm32-metapac]
-# path = "../stm32-data/build/stm32-metapac"
-# features = [ "memory-x", "rt"] 
 
 # disable all optimizations
 [profile.dev]

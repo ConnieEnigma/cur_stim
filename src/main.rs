@@ -66,6 +66,37 @@ fn setup_camera() -> (gpio::GpioPort, i2c::I2c) {
     (cam_down, i2c)
 }
 
+                // pub const $name: GpioPort = GpioPort {
+                //     port: $port,
+                //     pin: $pin,
+                //     alt_func: 0,
+                //     mode: Moder::OUTPUT,
+                //     ot: Ot::PUSHPULL,
+                //     pupd: Pupdr::FLOATING,
+                // };
+fn setup_imu(i2c: &mut i2c::I2c) {
+    // pa3 to ground
+    let mut pa3 = gpio::PA3;
+    pa3.setup();
+    pa3.set_low();
+    delay_ms(100);
+    defmt::info!("start setup imu");
+    // icm-20948
+    let addr = 0x68 << 1;
+    // read who am i
+    let mut buf = [0u8; 1];
+    let option = i2c::I2cMessage {
+        addr,
+        data: &mut buf,
+    };
+    i2c.write_read(addr, &mut [0u8], &mut buf).unwrap();
+    // i2c.receive(option).unwrap();
+    // i2c.receive(addr, 0x00, &mut buf).unwrap();
+    defmt::info!("imu who am i: {:?}", buf[0]);
+
+}
+
+
 fn setup_led() -> gpio::GpioPort {
     let green: gpio::GpioPort = gpio::PD15;
     green.setup();
@@ -119,6 +150,7 @@ async fn async_main(spawner: Spawner) {
             let dcmi = set_dcmi();
             (cam_down, i2c, sd, dcmi)
         });
+    setup_imu(&mut i2c);
 
     defmt::info!("usb init finished!");
     let mut power_on = false;
