@@ -20,7 +20,7 @@ cortex-m = { version = "0.7.7", features = [
 ]} 
 u5-lib = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git",features = [
     "stm32u5a5qj",
-#    "memory-x",
+#   "memory-x",
     # "stm32u575zi"
     ], default-features = false, branch = "dev" }
 eb_cmds = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/eb_cmds.git"}
