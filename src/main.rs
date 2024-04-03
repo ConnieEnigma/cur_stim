@@ -17,8 +17,8 @@ use embassy_usb::{
 };
 use futures::future::join;
 
-use u5_lib::clock::delay_ms;
 use u5_lib::com_interface::ComInterface;
+use u5_lib::{clock::delay_ms, i2c::I2cMessage};
 use u5_lib::{
     gpio::{SDMMC2_CMD_PD7, SDMMC2_D0_PB14},
     *,
@@ -43,8 +43,12 @@ fn setup_camera() -> (gpio::GpioPort, i2c::I2c) {
     rst.setup();
     cam_down.set_high();
     rst.set_low();
-    clock::set_mco(gpio::GPIO_MCO_PA8, clock::Mcosel::HSI48, clock::Mcopre::DIV2); // clock. which use PA8 as clock output
-    // cam_down.set_high();
+    clock::set_mco(
+        gpio::GPIO_MCO_PA8,
+        clock::Mcosel::HSI48,
+        clock::Mcopre::DIV2,
+    ); // clock. which use PA8 as clock output
+       // cam_down.set_high();
     delay_ms(5);
     cam_down.set_low();
     delay_ms(5);
@@ -57,7 +61,7 @@ fn setup_camera() -> (gpio::GpioPort, i2c::I2c) {
         gpio::I2C2_SDA_PF0,
         gpio::I2C2_SCL_PF1,
     ))
-        .unwrap();
+    .unwrap();
     delay_ms(1);
 
     camera::setup_camera(&mut i2c);
@@ -66,36 +70,109 @@ fn setup_camera() -> (gpio::GpioPort, i2c::I2c) {
     (cam_down, i2c)
 }
 
-                // pub const $name: GpioPort = GpioPort {
-                //     port: $port,
-                //     pin: $pin,
-                //     alt_func: 0,
-                //     mode: Moder::OUTPUT,
-                //     ot: Ot::PUSHPULL,
-                //     pupd: Pupdr::FLOATING,
-                // };
+const ICM20948_ADDR: u16 = 0x68 << 1;
+
+const ICM20948_WHO_AM_I: u8 = 0x00;
+const ICM20948_GYRO_CONFIG_1: u8 = 0x01;
+const ICM20948_GYRO_CONFIG_2: u8 = 0x02;
+const ICM20948_USER_CTRL: u8 = 0x03;
+const ICM20948_LP_CONFIG: u8 = 0x05;
+const ICM20948_PWR_MGMT_1: u8 = 0x06;
+const ICM20948_PWR_MGMT_2: u8 = 0x07;
+const ICM20948_ACCEL_CONFIG: u8 = 0x14;
+const ICM20948_ACCEL_CONFIG2: u8 = 0x15;
+const ICM20948_ACC_XOUT_H: u8 = 0x2d;
+const ICM20948_ACC_XOUT_L: u8 = 0x2e;
+const ICM20948_ACC_YOUT_H: u8 = 0x2f;
+const ICM20948_ACC_YOUT_L: u8 = 0x30;
+const ICM20948_ACC_ZOUT_H: u8 = 0x31;
+const ICM20948_ACC_ZOUT_L: u8 = 0x32;
+const ICM20948_BANK_SEL: u8 = 0x7f;
+
+fn read_imu(i2c: &mut i2c::I2c) {
+    let mut buf = [0u8; 6];
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_ACC_XOUT_H],
+    };
+    i2c.write_read(ICM20948_ADDR, &mut [ICM20948_ACC_XOUT_H], &mut buf[0..1])
+        .unwrap();
+    i2c.write_read(ICM20948_ADDR, &mut [ICM20948_ACC_XOUT_L], &mut buf[1..2])
+        .unwrap();
+    i2c.write_read(ICM20948_ADDR, &mut [ICM20948_ACC_YOUT_H], &mut buf[2..3])
+        .unwrap();
+    i2c.write_read(ICM20948_ADDR, &mut [ICM20948_ACC_YOUT_L], &mut buf[3..4])
+        .unwrap();
+    i2c.write_read(ICM20948_ADDR, &mut [ICM20948_ACC_ZOUT_H], &mut buf[4..5])
+        .unwrap();
+    i2c.write_read(ICM20948_ADDR, &mut [ICM20948_ACC_ZOUT_L], &mut buf[5..6])
+        .unwrap();
+}
 fn setup_imu(i2c: &mut i2c::I2c) {
     // pa3 to ground
-    let mut pa3 = gpio::PA3;
-    pa3.setup();
-    pa3.set_low();
-    delay_ms(100);
+    let fsync = gpio::PA3;
+    fsync.setup();
+    fsync.set_low();
     defmt::info!("start setup imu");
     // icm-20948
-    let addr = 0x68 << 1;
-    // read who am i
     let mut buf = [0u8; 1];
-    let option = i2c::I2cMessage {
-        addr,
-        data: &mut buf,
-    };
-    i2c.write_read(addr, &mut [0u8], &mut buf).unwrap();
-    // i2c.receive(option).unwrap();
-    // i2c.receive(addr, 0x00, &mut buf).unwrap();
+    i2c.write_read(ICM20948_ADDR, &mut [ICM20948_WHO_AM_I], &mut buf)
+        .unwrap(); // read who am i
     defmt::info!("imu who am i: {:?}", buf[0]);
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_PWR_MGMT_1, 0x00],
+    };
+    i2c.send(&message).unwrap();
 
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_PWR_MGMT_1, 0x80], // reset the device
+    };
+
+    // config the accelerometer
+    i2c.send(&message).unwrap();
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_ACCEL_CONFIG, 0x18], // cofig accelerometer full scale range to 16g
+    };
+    i2c.send(&message).unwrap();
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_ACCEL_CONFIG2, 0x00], // disable accelerometer low pass filter
+    };
+    i2c.send(&message).unwrap();
+
+    // config the gyroscope
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_GYRO_CONFIG_1, 0x18], // config gyroscope full scale range to 2000dps
+    };
+    i2c.send(&message).unwrap();
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_GYRO_CONFIG_2, 0x00], // disable gyroscope low pass filter
+    };
+    i2c.send(&message).unwrap();
+
+    // config magnetometer
+    // todo: add magnetometer config
+    //
+    // todo: configure samle rate (all sensors at 100Hz)
+    //
+
+    // Enable sensor
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_PWR_MGMT_2, 0x00], // enable the device
+    };
+    i2c.send(&message).unwrap();
+    let message = I2cMessage {
+        addr: ICM20948_ADDR,
+        data: &mut [ICM20948_PWR_MGMT_1, 0x09], // enable the i2c master
+    };
+    i2c.send(&message).unwrap();
 }
-
 
 fn setup_led() -> gpio::GpioPort {
     let green: gpio::GpioPort = gpio::PD15;
@@ -105,7 +182,18 @@ fn setup_led() -> gpio::GpioPort {
 
 fn setup_sd() -> sdmmc::SdInstance {
     let mut sd = sdmmc::SdInstance::new(sdmmc::SDMMC2);
-    sd.init(gpio::SDMMC2_CK_PD6, SDMMC2_CMD_PD7, SDMMC2_D0_PB14, SDMMC2_D1_PB15, SDMMC2_D2_PB3, SDMMC2_D3_PB4, SDMMC2_D4_PB8, SDMMC2_D5_PB9, SDMMC2_D6_PC6, SDMMC2_D7_PC7);
+    sd.init(
+        gpio::SDMMC2_CK_PD6,
+        SDMMC2_CMD_PD7,
+        SDMMC2_D0_PB14,
+        SDMMC2_D1_PB15,
+        SDMMC2_D2_PB3,
+        SDMMC2_D3_PB4,
+        SDMMC2_D4_PB8,
+        SDMMC2_D5_PB9,
+        SDMMC2_D6_PC6,
+        SDMMC2_D7_PC7,
+    );
     sd
 }
 
@@ -158,7 +246,7 @@ async fn async_main(spawner: Spawner) {
     gpio::PD10.setup();
     gpio::PD14.setup();
     gpio::PD15.setup();
-    // set high 
+    // set high
     gpio::PD10.set_high();
     gpio::PD14.set_high();
     gpio::PD15.set_high();
@@ -166,7 +254,6 @@ async fn async_main(spawner: Spawner) {
     gpio::PD10.set_low();
     gpio::PD14.set_low();
     gpio::PD15.set_low();
-
 
     loop {
         if !power_on {
@@ -200,9 +287,9 @@ async fn async_main(spawner: Spawner) {
                 camera::save_picture(&mut pic_buf, &sd).await;
                 defmt::info!("finish save picture, ########################");
             })
-                .await;
-        })
             .await;
+        })
+        .await;
     }
 }
 
@@ -217,7 +304,10 @@ fn main() -> ! {
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::signal::Signal;
-use u5_lib::gpio::{SDMMC2_D1_PB15, SDMMC2_D2_PB3, SDMMC2_D3_PB4, SDMMC2_D4_PB8, SDMMC2_D5_PB9, SDMMC2_D6_PC6, SDMMC2_D7_PC7};
+use u5_lib::gpio::{
+    SDMMC2_D1_PB15, SDMMC2_D2_PB3, SDMMC2_D3_PB4, SDMMC2_D4_PB8, SDMMC2_D5_PB9, SDMMC2_D6_PC6,
+    SDMMC2_D7_PC7,
+};
 
 // static mut POWER_STATE: bool = false;
 static POWER_SIGNAL: Signal<CriticalSectionRawMutex, bool> = Signal::new();
@@ -328,7 +418,16 @@ async fn usb_handler<'d>(class: &mut CdcAcmClass<'d, usb_otg::Driver>) -> Result
         match command {
             Command::SetTim(year, month, day, hour, minute, second, period) => {
                 // rtc::set_time(year, month, day, hour, minute, second, period);
-                rtc::setup(year, month, day, hour, minute, second, period, rtc::RtcSource::LSE);
+                rtc::setup(
+                    year,
+                    month,
+                    day,
+                    hour,
+                    minute,
+                    second,
+                    period,
+                    rtc::RtcSource::LSE,
+                );
                 let response = eb_cmds::Response::SetTim(0);
                 let (buf, len) = response.to_array();
                 class.write_packet(&buf[..len]).await.unwrap();
@@ -336,7 +435,8 @@ async fn usb_handler<'d>(class: &mut CdcAcmClass<'d, usb_otg::Driver>) -> Result
             Command::GetTim => {
                 let date = rtc::get_date();
                 let time = rtc::get_time();
-                let response = eb_cmds::Response::GetTim(date.0, date.1, date.2, time.0, time.1, time.2);
+                let response =
+                    eb_cmds::Response::GetTim(date.0, date.1, date.2, time.0, time.1, time.2);
                 let (buf, len) = response.to_array();
                 class.write_packet(&buf[..len]).await.unwrap();
             }
@@ -345,7 +445,9 @@ async fn usb_handler<'d>(class: &mut CdcAcmClass<'d, usb_otg::Driver>) -> Result
                 buf[0] = 0x02;
                 let mut pic_buf = [0; 512];
                 let start_block = (id + IMG_START_BLOCK) * IMG_SIZE;
-                sd.read_single_block_async(&mut pic_buf, start_block).await.unwrap();
+                sd.read_single_block_async(&mut pic_buf, start_block)
+                    .await
+                    .unwrap();
                 // get the end of picture
                 let pic_end = ((pic_buf[0] as u32) << 24)
                     | ((pic_buf[1] as u32) << 16)
@@ -376,7 +478,9 @@ async fn usb_handler<'d>(class: &mut CdcAcmClass<'d, usb_otg::Driver>) -> Result
                 for block in 1..block_count {
                     // sd.read_single_block(&mut buf, start_block + block).unwrap();
                     // let mut pic_buf = [0; 512]; // why without this line, the program not work?
-                    sd.read_single_block_async(&mut pic_buf, start_block + block).await.unwrap();
+                    sd.read_single_block_async(&mut pic_buf, start_block + block)
+                        .await
+                        .unwrap();
                     start = 0;
                     loop {
                         if start >= pic_buf.len() {
@@ -395,7 +499,9 @@ async fn usb_handler<'d>(class: &mut CdcAcmClass<'d, usb_otg::Driver>) -> Result
             }
             Command::GetPicNum => {
                 let mut buf = [0u8; 512];
-                sd.read_single_block_async(&mut buf, SIZE_BLOCK).await.unwrap();
+                sd.read_single_block_async(&mut buf, SIZE_BLOCK)
+                    .await
+                    .unwrap();
                 let num = ((buf[0] as u32) << 24)
                     | ((buf[1] as u32) << 16)
                     | ((buf[2] as u32) << 8)
