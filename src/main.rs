@@ -220,7 +220,7 @@ fn set_dcmi() -> dcmi::DcmiPort {
 #[task]
 async fn async_main(spawner: Spawner) {
     // clock::init_clock(true, false, clock::ClockFreqs::KernelFreq4Mhz);
-    clock::init_clock(false, true, true, clock::ClockFreqs::KernelFreq160Mhz);
+    // clock::init_clock(false, true, true, clock::ClockFreqs::KernelFreq160Mhz);
     // cam_down.set_high();
     delay_ms(200);
     let green = setup_led();
@@ -332,9 +332,9 @@ async fn btn() {
 #[embassy_executor::task]
 pub async fn usb_task() {
     let _ep_out_buffer = [0u8; 256];
-    let mut config = usb_otg::Config::default();
+    let mut config = usb_otg_hs::Config::default();
     config.vbus_detection = false;
-    let driver = usb_otg::Driver::new(config, gpio::USB_DM_PA11, gpio::USB_DP_PA12);
+    let driver = usb_otg_hs::Driver::new(config, gpio::USB_DM_PA11, gpio::USB_DP_PA12);
 
     // // Create embassy-usb Config
     let mut config = embassy_usb::Config::new(0xaaaa, 0xefba);
@@ -399,7 +399,7 @@ const IMG_SIZE: u32 = 2000;
 // 2000 block = 2000 * 512 = 1M
 const SIZE_BLOCK: u32 = 1; // first block store the number of image files
 
-async fn usb_handler<'d>(class: &mut CdcAcmClass<'d, usb_otg::Driver>) -> Result<(), Disconnected> {
+async fn usb_handler<'d>(class: &mut CdcAcmClass<'d, usb_otg_hs::Driver>) -> Result<(), Disconnected> {
     let mut in_buf: [u8; 128] = [0; 128];
     // the maximum size of the command is 64 bytes
 

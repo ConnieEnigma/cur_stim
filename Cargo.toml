@@ -4,20 +4,23 @@ version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[[bin]]
-name = "i2c"
-path = "src/bin/i2c.rs"
+# [[bin]]
+# name = "i2c"
+# path = "src/bin/i2c.rs"
 
 
-[net]
-git-fetch-with-cli = true
+# [net]
+# git-fetch-with-cli = true
 
 [dependencies]
 # cortex-m = "0.7.0"
 cortex-m = { version = "0.7.7" }
-u5-lib = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git", features = [
+#u5-lib = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git", features = [
+#    "stm32u5a5qj",
+#], default-features = false, branch = "dev" }
+u5-lib = { path="../u5_new", features = [
     "stm32u5a5qj",
-], default-features = false, branch = "dev" }
+], default-features = false }
 eb_cmds = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/eb_cmds.git" }
 #critical-section = "1.1.2"
 

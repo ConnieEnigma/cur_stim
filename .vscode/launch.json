@@ -27,7 +27,7 @@
           {
             "coreIndex": 0,
             //!MODIFY
-            "programBinary": "/home/zong/Code/u5_example/target/thumbv8m.main-none-eabihf/debug/u5_example",
+            "programBinary": "/home/zong/Code/u5_example/target/thumbv8m.main-none-eabihf/debug/usb_hs",
             //!MODIFY
             "svdFile": "stm32u5a5.svd",
             "rttEnabled": true
