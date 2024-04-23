@@ -16,7 +16,11 @@ use embassy_usb::{
 use futures::future::join;
 // use stm32_metapac;
 
-use u5_lib::{pwr::vddusb_monitor_up, usb_otg_hs::mod_new::{power_up_init, setup_process}, *};
+use u5_lib::{
+    pwr::vddusb_monitor_up,
+    usb_otg_hs::mod_new::{cdc_acm_ep2_read, power_up_init, setup_process},
+    *,
+};
 
 // define defmt format
 #[derive(defmt::Format)]
@@ -42,14 +46,15 @@ async fn main(spawner: Spawner) {
     pwr::vddusb_monitor_up_tmp();
     power_up_init();
     defmt::info!("vddusb monitor finished!");
-    // 
+    //
 
-    spawner.spawn( setup_process()).unwrap();
-
+    spawner.spawn(setup_process()).unwrap();
 
     defmt::info!("usb init finished!");
     loop {
         exti::EXTI13_PC13.wait_for_raising().await;
+        // spawner.spawn(cdc_acm_ep2_read()).unwrap();
+        cdc_acm_ep2_read().await;
         GREEN.toggle();
     }
 }
