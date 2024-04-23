@@ -1,0 +1,74 @@
+INFO  setup led finished!
+└─ usb_hs::____embassy_main_task::{async_fn#0} @ src/bin/usb_hs.rs:37  
+TRACE init
+└─ u5_lib::usb_otg_hs::mod_new::power_up_init @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:12  
+TRACE USB power stabilized
+└─ u5_lib::usb_otg_hs::mod_new::power_up_init @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:56  
+INFO  restore_irqs
+└─ u5_lib::usb_otg_hs::restore_irqs @ /home/zong/Code/u5_new/src/usb_otg_hs/mod.rs:84  
+TRACE USB IRQs start
+└─ u5_lib::usb_otg_hs::mod_new::power_up_init @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:91  
+TRACE Core id 00005000
+└─ u5_lib::usb_otg_hs::mod_new::power_up_init @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:96  
+INFO  vddusb monitor finished!
+└─ usb_hs::____embassy_main_task::{async_fn#0} @ src/bin/usb_hs.rs:44  
+INFO  OTG_HS interrupt with ints 44000020  and mask c00c3814, and 40000000
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:557 
+INFO  srqint
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:581 
+INFO  usb init finished!
+└─ usb_hs::____embassy_main_task::{async_fn#0} @ src/bin/usb_hs.rs:50  
+TRACE read start len=8
+└─ u5_lib::usb_otg_hs::mod_new::read0::{async_fn#0} @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:371 
+INFO  doepdma0: 20001a70
+└─ u5_lib::usb_otg_hs::mod_new::read0::{async_fn#0} @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:374 
+INFO  *************************************
+└─ u5_lib::usb_otg_hs::mod_new::read0::{async_fn#0} @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:376 
+INFO  doepctl0: 8000
+└─ u5_lib::usb_otg_hs::mod_new::read0::{async_fn#0} @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:377 
+INFO  doeptsiz0: 0
+└─ u5_lib::usb_otg_hs::mod_new::read0::{async_fn#0} @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:378 
+INFO  doepctl0: 8000
+└─ u5_lib::usb_otg_hs::mod_new::read0::{async_fn#0} @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:387 
+INFO  doepctl0: 8000
+└─ u5_lib::usb_otg_hs::mod_new::read0::{async_fn#0} @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:404 
+INFO  doeptsiz0: 20080000
+└─ u5_lib::usb_otg_hs::mod_new::read0::{async_fn#0} @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:405 
+INFO  OTG_HS interrupt with ints 04008c20  and mask c00c3814, and 00000800
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:557 
+INFO  usbsusp
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:566 
+INFO  OTG_HS interrupt with ints 04809420  and mask c00c3814, and 00001000
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:557 
+INFO  usbrst
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:585 
+TRACE init_fifo
+└─ u5_lib::usb_otg_hs::mod_new::init_fifo @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:217 
+INFO  init_endpoints
+└─ u5_lib::usb_otg_hs::endpoint_new::init_endpoint @ /home/zong/Code/u5_new/src/usb_otg_hs/endpoint_new.rs:254 
+INFO  OTG_HS interrupt with ints 0480a420  and mask c00c3814, and 00002000
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:557 
+INFO  enumdne
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:570 
+TRACE doepctl0: 28000
+└─ u5_lib::usb_otg_hs::mod_new::init_enumeration_done @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:258 
+TRACE doepdma0: 20001a70
+└─ u5_lib::usb_otg_hs::mod_new::init_enumeration_done @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:259 
+TRACE doeptsiz0: 60080000
+└─ u5_lib::usb_otg_hs::mod_new::init_enumeration_done @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:260 
+TRACE irq mask 0: c00c3814
+└─ u5_lib::usb_otg_hs::mod_new::init_enumeration_done @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:261 
+INFO  OTG_HS interrupt with ints 04808438  and mask c00c3814, and 00000010
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:557 
+INFO  rxflvl with ep_num: 0, len: 8
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:600 
+TRACE SETUP_DATA_RX, with data 1000680, 400000, [80, 6, 0, 1, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:611 
+INFO  rxflvl with ep_num: 0, len: 0
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:600 
+TRACE OUT_DATA_DONE ep=0
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:632 
+INFO  rxflvl with ep_num: 0, len: 0
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:600 
+TRACE SETUP_DATA_DONE ep=0
+└─ u5_lib::usb_otg_hs::mod_new::on_interrupt @ /home/zong/Code/u5_new/src/usb_otg_hs/mod_new.rs:636 
