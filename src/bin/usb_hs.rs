@@ -15,9 +15,11 @@ use embassy_executor::Spawner;
 // use stm32_metapac;
 
 use u5_lib::{
-    usb_otg_hs::mod_new::{cdc_acm_ep2_read, power_up_init, setup_process},
+    usb_otg_hs::mod_new::{cdc_acm_ep2_read },
     *,
 };
+use u5_lib::usb_otg_hs::control_pipe::setup_process;
+use u5_lib::usb_otg_hs::power::power_up_init;
 
 // define defmt format
 #[derive(defmt::Format)]
