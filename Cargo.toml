@@ -9,8 +9,6 @@ edition = "2021"
 # path = "src/bin/i2c.rs"
 
 
-# [net]
-# git-fetch-with-cli = true
 
 [dependencies]
 # cortex-m = "0.7.0"
