@@ -29,11 +29,11 @@ async fn main(spawner: Spawner) {
     pwr::vddusb_monitor_up_tmp();
     power_up_init();
     defmt::info!("vddusb monitor finished!");
-    spawner.spawn(usb_task()).unwrap();
 
     spawner.spawn(setup_process()).unwrap();
 
     defmt::info!("usb init finished!");
+    spawner.spawn(usb_task()).unwrap();
     loop {
         exti::EXTI13_PC13.wait_for_raising().await;
         GREEN.toggle();
@@ -48,8 +48,8 @@ async fn usb_task() {
 
     loop {
         // todo: in read function, we need to wait for usbepen to be set.
-        let ret = cdc_acm_ep2_read().await; 
-        defmt::info!("read ret: {:?}", ret);
+        let (ret, len) = cdc_acm_ep2_read().await;
+        defmt::info!("read ret: {:?}", &ret[0..len]);
     }
 }
 
