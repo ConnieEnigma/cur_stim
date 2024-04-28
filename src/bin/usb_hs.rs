@@ -17,7 +17,7 @@ const GREEN: gpio::GpioPort = gpio::PB7;
 
 #[embassy_executor::main]
 async fn main(spawner: Spawner) {
-    clock::init_clock(false, true, true, clock::ClockFreqs::KernelFreq160Mhz);
+    clock::init_clock(false, true, true, clock::ClockFreqs::KernelFreq4Mhz);
     low_power::no_deep_sleep_request();
     GREEN.setup();
     // low_power::no_deep_sleep_request();

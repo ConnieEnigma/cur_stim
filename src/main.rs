@@ -5,6 +5,7 @@
 
 use core::panic::PanicInfo;
 use aligned::Aligned;
+use defmt::println;
 
 use defmt_rtt as _;
 use eb_cmds::Command;
@@ -89,7 +90,7 @@ fn set_dcmi() -> dcmi::DcmiPort {
     let dcmi = dcmi::DCMI;
 
     dcmi.init(
-        gpio::DCMI_D0_PA9, // todo: updat the pin
+        gpio::DCMI_D0_PA9, // todo: update the pin
         gpio::DCMI_D1_PA10,
         gpio::DCMI_D2_PE0,
         gpio::DCMI_D3_PE1,
@@ -110,8 +111,8 @@ static mut PIC_BUF: Aligned<aligned::A4,[u8; 1_600_000]> = Aligned([0u8; 1_600_0
 // #[embassy_executor::main]
 #[task]
 async fn async_main(spawner: Spawner) {
-    clock::init_clock(false, true, 26_000_000, true, clock::ClockFreqs::KernelFreq160Mhz);
-    low_power::no_deep_sleep_request();
+    clock::init_clock(false, true, 26_000_000, true, clock::ClockFreqs::KernelFreq4Mhz);
+    // low_power::no_deep_sleep_request();
 
     // let (green, blue, blue) = setup_leds();
     let (green, orange, _blue) = setup_leds();
@@ -124,6 +125,7 @@ async fn async_main(spawner: Spawner) {
             let (cam_down, i2c) = setup_camera();
             defmt::info!("camera init finished!");
             let dcmi = set_dcmi();
+            cam_down.set_high();
             (cam_down, i2c, sd, dcmi)
         });
     spawner.spawn(pwr::vddusb_monitor_up()).unwrap();
@@ -165,12 +167,6 @@ async fn async_main(spawner: Spawner) {
                     defmt::info!("finish capture, ########################");
                     camera::save_picture(&mut PIC_BUF[..], &sd).await;
                     defmt::debug!("finish save picture, ##################");
-                    for i in 0..20 {
-                        let begin = i * 30_000;
-                        let end = (i + 1) * 30_000;
-                        cdc_acm_ep2_write(&PIC_BUF[begin..end]).await;
-                    }
-                    defmt::debug!("finish send picture, ##################");
                     orange.toggle();
                 }
             })
@@ -228,7 +224,7 @@ async unsafe fn usb_task() {
     loop {
         // todo: in read function, we need to wait for usbepen to be set.
         let (ret, len) = cdc_acm_ep2_read().await;
-        cdc_acm_ep2_write(&ret[0..len]).await;
+        // cdc_acm_ep2_write(&ret[0..len]).await;
         // continue;
         let command = eb_cmds::Command::from_array(&ret[..]);
         if command.is_err() {
@@ -266,9 +262,31 @@ async unsafe fn usb_task() {
             }
             Command::GetPic(id) => {
                 let start_block = (id + IMG_START_BLOCK) * IMG_SIZE;
-                // sd.read_single_block_async(&mut pic_buf[..], start_block).await.unwrap();
+                let _ = sd.read_single_block_async(&mut PIC_BUF[..], start_block).await.unwrap();
+
+                // pic_buf[0] = (pic_end >> 24) as u8;
+                // pic_buf[1] = ((pic_end >> 16) & 0xff) as u8;
+                // pic_buf[2] = ((pic_end >> 8) & 0xff) as u8;
+                // pic_buf[3] = (pic_end & 0xff) as u8;
+                // get the picture length from the first 4 bytes
+                let pic_end = ((PIC_BUF[0] as u32) << 24)
+                    | ((PIC_BUF[1] as u32) << 16)
+                    | ((PIC_BUF[2] as u32) << 8)
+                    | (PIC_BUF[3] as u32);
                 let _ = sd.read_multiple_blocks_async(&mut PIC_BUF[..], start_block, IMG_SIZE).await;
-                cdc_acm_ep2_write(&PIC_BUF[..]).await;
+                // only allow to send 30k data each time
+                for i in 0..50 {
+                    let begin = i * 30_000;
+                    let begin = core::cmp::max(16, begin);
+                    let mut end = (i + 1) * 30_000;
+                    if end > pic_end as usize {
+                        end = pic_end as usize;
+                    }
+                    cdc_acm_ep2_write(&PIC_BUF[begin..end]).await;
+                    if end == pic_end as usize {
+                        break;
+                    }
+                }
             }
             Command::GetPicNum => {
                 let mut buf:Aligned<aligned::A4, [u8; 512]> = Aligned([0u8; 512]);
@@ -280,10 +298,18 @@ async unsafe fn usb_task() {
                 // ebcmd::Response::GetPicNum(num)
                 let res = eb_cmds::Response::GetPicNum(num);
                 let (buf, len) = res.to_array();
-                // class.write_packet(&buf[0..len]).await.unwrap();
-                cdc_acm_ep2_write(&buf[0..len]).await;
+                let mut buf_align:Aligned<aligned::A4, [u8; 64]> = Aligned([0u8; 64]);
+                for i in 0..len {
+                    buf_align[i] = buf[i];
+                }
+                // cdc_acm_ep2_write(&buf[0..len]).await;
+                cdc_acm_ep2_write(&buf_align[..len]).await;
             }
-            Command::ClearPic => {}
+            Command::ClearPic => {
+                let mut buf:Aligned<aligned::A4, [u8; 512]> = Aligned([0u8; 512]);
+                sd.write_single_block_async(&mut buf[..], SIZE_BLOCK).await;
+
+            }
         }
     }
 }
