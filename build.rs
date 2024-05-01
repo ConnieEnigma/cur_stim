@@ -1,21 +1,34 @@
+use std::path::Path;
+use std::env;
+use std::fs::File;
+use std::io::Write;
+
 fn main() {
-    // println!("cargo:rustc-link-arg-bins=-Tmemory.x");
+    // println!("cargo:rustc-link-arg-bins=-Tmemory.x"); // feagure in cortex-m-rt
     println!("cargo:rustc-link-arg-bins=--nmagic");
     println!("cargo:rustc-link-arg-bins=-Tlink.x");
     println!("cargo:rustc-link-arg-bins=-Tdefmt.x");
-    // enable cfg sdmmc
-    // println!("cargo:rustc-cfg=sdmmc");
-    // for (key, _value) in std::env::vars() {
-    //     // Check if the current environment variable is a feature that starts with "STM32U5"
-    //     if key.starts_with("CARGO_FEATURE_STM32U575") {
-    //         // If found, print the cargo directive to set the `stm32u5` cfg flag
-    //         println!("cargo:rustc-cfg=stm32u575");
-    //         break; // Exit the loop once the first matching feature is found
-    //     }
-    //     if key.starts_with("CARGO_FEATURE_STM32U5A5") {
-    //         // If found, print the cargo directive to set the `stm32u5` cfg flag
-    //         println!("cargo:rustc-cfg=stm32u5a5");
-    //         break; // Exit the loop once the first matching feature is found
-    //     }
-    // }
+    let runner = if cfg!(feature = "stm32u5a5zj") {
+        "probe-rs run --chip STM32U5A5ZJTx"
+    } else if cfg!(feature = "stm32u575zi") {
+        "probe-rs run --chip STM32U575ZITxQ"
+    } else {
+        panic!("No target specified")
+    };
+    let config_path = Path::new(".cargo").join("config.toml");
+    let mut config_file = File::create(&config_path).expect("Failed to create config file");
+
+    writeln!(config_file, "[target.thumbv8m.main-none-eabihf]").expect("Failed to write to config file");
+    writeln!(config_file, "runner = \"{}\"", runner).expect("Failed to write to config file");
+
+    writeln!(config_file, "[build]").expect("Failed to write to config file");
+    writeln!(config_file, "target = \"thumbv8m.main-none-eabihf\"").expect("Failed to write to config file");
+
+    writeln!(config_file, "[env]").expect("Failed to write to config file");
+    writeln!(config_file, "DEFMT_LOG = \"info\"").expect("Failed to write to config file");
+    // writeln!(config_file, "DEFMT_TIMESTAMP = \"1\"").expect("Failed to write to config file");
+
+    env::set_var("CARGO_RUNNER", runner);
 }
+
+

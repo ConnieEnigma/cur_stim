@@ -6,13 +6,15 @@
 			"command": "build",
 			"args": [
 				"--bin",
-				"usb_hs"
+				"u5_example",
+				"--features",
+				"stm32u575zi"
 			],
 			"problemMatcher": [
 				"$rustc"
 			],
 			"group": "build",
-			"label": "rust: cargo build",
+			"label": "rust: cargo build with feature",
 			"options": {
 				"env": {
 					"DEFMT_LOG": "info"
