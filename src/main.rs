@@ -3,29 +3,19 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-use core::panic::PanicInfo;
-use aligned::Aligned;
-use defmt::println;
-
 use defmt_rtt as _;
 use embassy_executor::Spawner;
 
 use u5_lib::{
     *,
-    clock::delay_ms,
-    com_interface::ComInterface,
+    low_power::{Executor, no_deep_sleep_request},
+    clock, clock::delay_ms, com_interface::ComInterface, exti, gpio, task,
+    i2c, i2c::I2c,
 };
 
-#[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    defmt::info!("panic");
-    defmt::error!(
-        "Location file name: {:?}, line: {:?}, col: {:?}",
-        _info.location().unwrap().file(),
-        _info.location().unwrap().line(),
-        _info.location().unwrap().column()
-    );
-    loop {}
+fn i2c_init() -> I2c {
+    let i2c_config = i2c::I2cConfig::new(1, 100_000, gpio::I2C1_SCL_PB6, gpio::I2C1_SDA_PB7);
+    I2c::new(i2c_config).unwrap()
 }
 
 #[task]
@@ -38,6 +28,8 @@ async fn async_main(spawner: Spawner) {
     let green: gpio::GpioPort = gpio::PB7;
     green.setup();
     green.set_high();
+    let i2c = i2c_init();
+    panic!("panic");
     loop {
         exti::EXTI13_PC13.wait_for_raising().await;
         green.toggle();
@@ -45,8 +37,6 @@ async fn async_main(spawner: Spawner) {
     }
 }
 
-use low_power::Executor;
-use u5_lib::low_power::no_deep_sleep_request;
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
@@ -54,3 +44,4 @@ fn main() -> ! {
         spawner.spawn(async_main(spawner)).unwrap();
     });
 }
+

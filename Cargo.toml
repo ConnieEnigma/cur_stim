@@ -11,19 +11,15 @@ edition = "2021"
 [dependencies]
 cortex-m = { version = "0.7.7" }
 aligned = "0.4.2"
-u5-lib = { path="../u5_new", features = [
-#    "stm32u5a5zj",
-], default-features = false }
+u5-lib = { path = "../u5_new", features = ["utils"] }
 eb_cmds = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/eb_cmds.git" }
-#critical-section = "1.1.2"
 
 defmt = "0.3.6"
 defmt-rtt = { version = "0.4.0" }
-#defmt-itm = { version = "0.3.0" }
 futures = { version = "0.3.17", default-features = false, fetures = [
     "async-await",
 ] }
-cortex-m-rt = { version = "0.7.3" , default-features = false }
+cortex-m-rt = { version = "0.7.3", default-features = false }
 
 
 [dependencies.embassy-usb]
