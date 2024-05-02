@@ -605,6 +605,7 @@ dependencies = [
 [[package]]
 name = "u5-lib"
 version = "0.1.0"
+source = "git+ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git?rev=36dfec969e#36dfec969e0b2a455fbfa29b3b4d0194ac864b63"
 dependencies = [
  "aligned",
  "cortex-m",
