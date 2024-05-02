@@ -10,32 +10,15 @@ edition = "2021"
 
 [dependencies]
 cortex-m = { version = "0.7.7" }
-aligned = "0.4.2"
-#u5-lib = { path = "../u5_new", features = ["utils"] }
 u5-lib = {git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git", features = ["utils"], rev= "36dfec969e"}
-eb_cmds = { git = "ssh://gitea@git.ggeta.com:2002/guangzong/eb_cmds.git" }
-
 defmt = "0.3.6"
 defmt-rtt = { version = "0.4.0" }
-futures = { version = "0.3.17", default-features = false, fetures = [
-    "async-await",
-] }
 cortex-m-rt = { version = "0.7.3", default-features = false }
-
-
-[dependencies.embassy-usb]
-git = "https://github.com/embassy-rs/embassy"
-rev = "35f284e"
 
 [dependencies.embassy-executor]
 features = ["nightly", "arch-cortex-m", "executor-thread"]
 git = "https://github.com/embassy-rs/embassy"
 rev = "35f284e"
-
-[dependencies.embassy-sync]
-git = "https://github.com/embassy-rs/embassy"
-rev = "35f284e"
-
 
 # disable all optimizations
 [profile.dev]
