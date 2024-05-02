@@ -10,7 +10,7 @@ edition = "2021"
 
 [dependencies]
 cortex-m = { version = "0.7.7" }
-u5-lib = {git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git", features = ["utils"], rev= "36dfec969e"}
+u5-lib = {git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git", features = ["utils"], rev= "2f8448f9bf"}
 defmt = "0.3.6"
 defmt-rtt = { version = "0.4.0" }
 cortex-m-rt = { version = "0.7.3", default-features = false }
@@ -28,4 +28,5 @@ debug = true
 [features]
 stm32u575zi = ["u5-lib/stm32u575zi"]
 stm32u5a5zj = ["u5-lib/stm32u5a5zj"]
+stm32u575ci = ["u5-lib/stm32u575ci"]
 #default = ["stm32u5a5zj"]

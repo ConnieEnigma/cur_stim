@@ -12,8 +12,10 @@ fn main() {
         "probe-rs run --chip STM32U5A5ZJTx"
     } else if cfg!(feature = "stm32u575zi") {
         "probe-rs run --chip STM32U575ZITxQ"
+    } else if cfg!(feature = "stm32u575ci") {
+        "probe-rs run --chip STM32U575CIUxQ"
     } else {
-        panic!("No target specified")
+        panic!("No chip selected");
     };
     let config_path = Path::new(".cargo").join("config.toml");
     let mut config_file = File::create(&config_path).expect("Failed to create config file");
