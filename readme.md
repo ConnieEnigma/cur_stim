@@ -15,12 +15,22 @@ use `winget install git` in windows
 
 Since we have private dependencies, we need to login to use git from system. Add following to `~/.cargo/config`:
 
-```toml
+``` toml
 [net]
 git-fetch-with-cli = true
-
 ```
+
 Make sure you have valid ssh keys in your system and git account.
+
+###  Use nightly version of Rust
+
+Type `rustup default nightly` in command window 
+
+### Install target
+
+Type `rustup target add thumbv8m.main-none-eabihf` in command window
+
+
 
 ## Build
 
@@ -33,10 +43,11 @@ Currently we only support very few chips.
 
 ## Flash and Run 
 
-You need probe-rs to flash and run the code. Install it with:
+You need `probe-rs` to flash and run the code. Install it with:
 
 ```bash
-cargo install probe-rs-cli
+cargo install cargo-binstall
+cargo binstall probe-rs
 ```
 
 Or you can install with `cargo binstall probe-rs"
