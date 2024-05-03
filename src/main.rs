@@ -49,12 +49,11 @@ fn i2c_send( i2c:&mut I2c, addr: u16, mut data: [u8; 2]) {
 }
 
 const POS_DAC_1_ADDR: u16  = 0x20;
+const POS_DAC_2_ADDR: u16  = 0x60;
+const NEG_DAC_1_ADDR: u16  = 0xA0;
+const NEG_DAC_2_ADDR: u16  = 0xE0;
 
 const DAC_REG_BASE: u8 = 0xF8;
-const DAC_REG_1: u8 = 0xF8;
-const DAC_REG_2: u8 = 0xF9;
-const DAC_REG_3: u8 = 0xFA;
-const DAC_REG_4: u8 = 0xFB;
 
 #[task]
 async fn async_main(spawner: Spawner) {
@@ -67,17 +66,33 @@ async fn async_main(spawner: Spawner) {
     s1.set_low();
     s2.set_high();
     s3.set_low();
-    s4.set_high();
+    s4.set_low();
     s5.set_low();
 
-    let (mut i2c_plus, mut i2c_minus) = i2c_init();
-    for i in 0..4{
-        i2c_send(&mut i2c_plus, POS_DAC_1_ADDR, [DAC_REG_BASE + i, 0x50]);
-    }
-    for i in 0..4 {
-        i2c_send(&mut i2c_minus, POS_DAC_1_ADDR, [DAC_REG_BASE + i, 0x50]);
-    }
-    defmt::info!("i2c finished!");
+    // let (mut i2c_plus, mut i2c_minus) = i2c_init();
+    // for i in 0..4{
+    //     i2c_send(&mut i2c_plus, POS_DAC_1_ADDR, [DAC_REG_BASE + i, 0xA8]);
+    // }
+    // for i in 0..4{
+    //     i2c_send(&mut i2c_plus, POS_DAC_2_ADDR, [DAC_REG_BASE + i, 0xA8]);
+    // }
+    // for i in 0..4 {
+    //     i2c_send(&mut i2c_minus, NEG_DAC_1_ADDR, [DAC_REG_BASE + i, 0x50]);
+    // }
+    // for i in 0..4 {
+    //     i2c_send(&mut i2c_minus, NEG_DAC_2_ADDR, [DAC_REG_BASE + i, 0x50]);
+    // }
+    // defmt::info!("i2c finished!");
+
+
+    let tmp_adc = adc::ADC1;
+    tmp_adc.init();
+    let adc_pin = gpio::ADC1_IN5_PA0;
+    adc_pin.setup();
+    
+    let res = tmp_adc.start_conversion_sw(5);
+    defmt::info!("adc value: {}", res);
+
 
     loop {
         green.toggle();
