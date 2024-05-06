@@ -114,7 +114,7 @@ async fn async_main(spawner: Spawner) {
 
     loop {
         s1.set_high();
-        if (counter == 60000){
+        if (counter == 1000){
             let res = tmp_adc.start_conversion_sw(5);
             let mut vpos : f32 = (res as f32 / 16383f32) * 3.3;
             defmt::info!("pos pulse value: {}", vpos);
@@ -123,7 +123,7 @@ async fn async_main(spawner: Spawner) {
         s1.set_low();
         delay_ms(1);
         s2.set_high();
-        if (counter == 60000){
+        if (counter == 1000){
             let res = tmp_adc.start_conversion_sw(5);
             let mut vneg : f32 = (res as f32 / 16383f32) * 3.3;
             defmt::info!("neg pulse value: {}", vneg);
