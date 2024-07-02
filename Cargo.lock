@@ -600,7 +600,7 @@ dependencies = [
 [[package]]
 name = "u5-lib"
 version = "0.1.0"
-source = "git+ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git?rev=c7bbfd1593#c7bbfd159347f24a23b0722b9b08f7b51e98b8c3"
+source = "git+ssh://git@github.com:22/chen-gz/stm32u5lib.git?rev=8fec3af#8fec3afebec2b6f557cd9a30f28abcbe350976d9"
 dependencies = [
  "aligned",
  "cortex-m",

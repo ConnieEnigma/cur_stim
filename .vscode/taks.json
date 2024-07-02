@@ -3,23 +3,11 @@
 	"tasks": [
 		{
 			"type": "cargo",
-			"command": "build",
+			"command": "run",
 			"args": [
-				"--bin",
-				"u5_example",
 				"--features",
 				"stm32u575zi"
-			],
-			"problemMatcher": [
-				"$rustc"
-			],
-			"group": "build",
-			"label": "rust: cargo build with feature",
-			"options": {
-				"env": {
-					"DEFMT_LOG": "info"
-				}
-			}
+			]
 		}
 	]
 }
