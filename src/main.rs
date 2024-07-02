@@ -22,6 +22,7 @@ fn switch_led_setup() -> ( gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio:
     let red: gpio::GpioPort = gpio::PB7;
     let green: gpio::GpioPort = gpio::PB8;
     let s0: gpio::GpioPort = gpio::PB15;
+    let s0: gpio::GpioPort = gpio::PB15;
     let s1: gpio::GpioPort = gpio::PA9;
     let s2: gpio::GpioPort = gpio::PA10;
     let s3: gpio::GpioPort = gpio::PB4;
@@ -33,6 +34,7 @@ fn switch_led_setup() -> ( gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio:
     
     green.setup();
     red.setup();
+    s0.setup();
     s0.setup();
     s1.setup();
     s2.setup();
