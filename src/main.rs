@@ -89,15 +89,12 @@ async fn async_main(spawner: Spawner) {
     TIM3_CH1_PA6.setup(); // s6. chopper frequency. 
     let _ = TIM1.init(Config::default());
     let _ = TIM3.init(Config::default());
-    // TIM1.set_pwm(1, 160, 80);
     //TIM1.set_pwm(2, 16000, 1600);  // (2, 16000, 1600) 1kHz 100us pulse. (2, 8000, 800) 2kHz 50us pulse. (2, 3200, 320) 5kHz 20us pulse. (2, 1600, 160) 10kHz 10us pulse. 
     //TIM1.set_pwm(3, 16000, 4000);
-    TIM3.set_pwm(1, 16, 8);
-    // TIM3.set_pwm(2, 160, 80);
+    TIM3.set_pwm(1, 160, 80);
     //TIM1.enable_output(2);
     //TIM1.enable_output(3);
     TIM3.enable_output(1);
-    //TIM3.enable_output(2);
     clock::set_mco(
         gpio::GPIO_MCO_PA8,
         clock::Mcosel::HSE,
@@ -111,24 +108,17 @@ async fn async_main(spawner: Spawner) {
     s2.set_low(); //neg DAC connection
     s3.set_high(); // pos DAC & capacitor -> Vstm 
     s4.set_high(); //neg DAC power
-    s5.set_high  (); //pos DAC power 
+    s5.set_high(); //pos DAC power 
     //s6.set_low(); //chopper switch
     s7.set_high(); // chopper and filter power
     s8.set_low(); // 1.5v DC connection
     chopper_clk.set_low();
 
-    let Ipos = 0.5;
+    let Ipos = 1.2;
     let Ipos_f64 = Ipos as f64;
     let Ineg = -1.0;
     let Ipos_hex = utils::cur_coding(Ipos);
     let Ineg_hex = utils::cur_coding(Ineg);
-
-
-    //let Ineg = 1.0; //1.0mA is the negative current
-    //let product2 = Ineg * num1;
-    //let Ineg_hex = libm::round(product2) as u8;
-    //defmt::info!("Ineg is {}", Ipos_hex);
-
 
     let (mut i2c_plus, mut i2c_minus) = i2c_init();
     for i in 0..4{
@@ -160,69 +150,114 @@ async fn async_main(spawner: Spawner) {
     let vref_data = tmp_adc.start_conversion_sw(0);
     delay_ms(100);
     let vref_data = tmp_adc.start_conversion_sw(0);
-    defmt::info!("Vref_data init! {}", vref_data);
+    //defmt::info!("Vref_data init! {}", vref_data);
     let vref_raw =  tmp_adc.get_vref_int_raw();
-    defmt::info!("Vref_raw init! {}", vref_raw);
+    //defmt::info!("Vref_raw init! {}", vref_raw);
     let vref = 3.0 * vref_raw as f64 / vref_data as f64;
-    defmt::info!("Vref init! {}", vref);
+    //defmt::info!("Vref init! {}", vref);
     let vref = vref / 16384.0;
+    defmt::info!("Vref init! {}", vref);
     delay_s(1);
     let mut adc_values = [0.0; 5];
     let mut adc_indexer = 0;
     let mut adc_sum = 0.0;
+    let mut adc_values1 = [0.0; 5];
+    let mut adc_indexer1 = 0;
+    let mut adc_sum1 = 0.0;
     let mut vbase = 0.0;
     let mut vbase_sum = 0.0;
+    let mut vbase_avg: f64 = 0.0;
+
+    let mut adc_sum_min: f64 = 0.2;
+    let mut adc_sum_max: f64 = 0.2;
 
     //measure electrode voltage at start
-    let res = tmp_adc.start_conversion_sw(5);
-    let vbase = res as f64 * vref;
-    vbase_sum -= adc_values[adc_indexer]; 
-    adc_values[adc_indexer] = vbase; 
-    vbase_sum += vbase;
-    let vbase_avg = vbase_sum/5.0;
-    defmt::info!("Vabse is {}", vbase_avg);
+    // for i in 0..6 {
+    //     let res = tmp_adc.start_conversion_sw(0);
+    //     let vbase = res as f64 * vref;
+    //     vbase_sum -= adc_values[adc_indexer]; 
+    //     adc_values[adc_indexer] = vbase; 
+    //     vbase_sum += vbase;
+    //     let vbase_avg = vbase_sum;
+    //     defmt::info!("Vbase is {}", vbase_avg * 2.0);
+    // }
 
-    //measure Rp before stimulation begin
-    for i in 0..6{
-        s1.set_high();
-        delay_ms(5);
-        let res = tmp_adc.start_conversion_sw(5);
-        let vpos = res as f64 * vref;
-        adc_sum -= adc_values[adc_indexer]; 
-        adc_values[adc_indexer] = vpos; 
-        adc_sum += vpos;
-        defmt::info!("Vtotal is {}", adc_sum);
-    }
-    let Ipos_f64:f64 = Ipos as f64;
-    let mut R_total = (adc_sum - vbase_avg)/Ipos_f64 * 1000.0; 
-    defmt::info!("Rtotal is: {}", R_total);
-    s1.set_low();
+    
+    // measure Rp before stimulation begin
+    TIM1_CH2_PA9.setup();
+    TIM1.set_pwm(2, 64000, 63500); //64000, 250Hz; 32000 500Hz; 16000, 1kHz; 3200, 5kHz; 1600, 10kHz; 
+    //TIM1.set_pwm(2, 1600, 800);
+    TIM1.enable_output(2);
+    // for i in 0..9{
+    //     let res = tmp_adc.start_conversion_sw(5);
+    //     let vpos = res as f64 * vref;
+    //     adc_sum -= adc_values[adc_indexer]; 
+    //     adc_values[adc_indexer] = vpos; 
+    //     adc_sum += vpos;
+    //     defmt::info!("Vtotal is {}", (adc_sum - 0.3)/5.0);
+    //     delay_s(2);
+    //     adc_indexer += 1;
+    //     adc_indexer %= 5;
+    // }
+    
+    // let Ipos_f64:f64 = Ipos as f64;
+    // let R_total = ((adc_sum - 0.3)/5.0)* 1000.0 * 2.0 / Ipos_f64 ; 
+    // defmt::info!("Rtotal is: {}", R_total);
+    // s1.setup();
+    let R_total = 710.0;
 
     loop {
-        //s2.set_high();
-        s2.set_high();
-        delay_us(100);
-        //s2.set_low();
-        s2.set_low();
-        delay_us(10);
-        s1.set_high();
-        delay_us(200);
-        s1.set_low();
-        delay_us(690);
+        // s2.set_high();
+        // delay_us(100);
+        // s2.set_low();
+        // delay_us(100);
+        // s1.set_high();
+        // delay_us(200);
+        // s1.set_low();
+        // delay_us(500);
+        
+        // s4.set_low();
+        // s5.set_low();
+        // delay_ms(9);
+        // s4.set_high();
+        // s5.set_high();
+        // //delay_ms(4);
+
+        // for i in 0..4{
+        //     i2c_send(&mut i2c_plus, POS_DAC_1_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
+        // }
+        // for i in 0..4{         
+        //     i2c_send(&mut i2c_plus, POS_DAC_2_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
+        // }
+        // for i in 0..4 {
+        //     i2c_send(&mut i2c_minus, NEG_DAC_1_ADDR, [DAC_REG_BASE + i, Ineg_hex]);
+        // }
+        // for i in 0..4 {
+        //     i2c_send(&mut i2c_minus, NEG_DAC_2_ADDR, [DAC_REG_BASE + i, Ineg_hex]);
+        // }
     
         counter += 1;
-        if counter >= 5000 {
+        if counter >= 2000 {
             TIM1_CH2_PA9.setup();
-            TIM1.set_pwm(2, 1600, 1580);
+            TIM1.set_pwm(2, 1600, 800); //64000, 250Hz; 32000 500Hz; 16000, 1kHz; 3200, 5kHz; 1600, 10kHz; 
             TIM1.enable_output(2);
-            let res = tmp_adc.start_conversion_sw(5); 
-            let vpos = res as f64 * vref;
-            adc_sum -= adc_values[adc_indexer]; 
-            adc_values[adc_indexer] = vpos; 
-            adc_sum += vpos; 
-            defmt::info!("adc average value: {}", adc_sum/5.0);
-            
-            let Rs = (adc_sum/5.0 - vbase_avg) * 1000.0 / Ipos_f64;
+            let res1 = tmp_adc.start_conversion_sw(5); 
+            let vpos1 = res1 as f64 * vref;
+            adc_sum1 -= adc_values1[adc_indexer1]; 
+            adc_values1[adc_indexer1] = vpos1; 
+            adc_sum1 += vpos1; 
+            if (adc_sum1/5.0) > adc_sum_max {
+                let adc_sum_max = (adc_sum1/5.0);
+                defmt::info!("max value change");
+                defmt::info!("adc max value is {}.adc min value is {}. adc value is {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
+            }
+            else if (adc_sum1/5.0) < adc_sum_min {
+                let adc_sum_min = (adc_sum1/5.0);
+                defmt::info!("min value change");
+                defmt::info!("adc max value is {}.adc min value is {}. adc value is {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
+            }
+           
+            let Rs = (adc_sum_max - adc_sum_min) * 1000.0 *2.0 / Ipos_f64;
             let Rp = R_total - Rs;
             defmt::info!("Rs is {}", Rs);
             defmt::info!("Rp is {}", Rp);
@@ -234,23 +269,25 @@ async fn async_main(spawner: Spawner) {
             // let base = 1 - Ineg*t1*1e-3/(I0*tauRC);
             // let t2 = -tauRC*base.ln();
 
-            //defmt::info!("adc average value: {}", adc_sum/5.0);
-            // if adc_sum / 5.0 > 1.6 {
-            //     red.set_high();
-            // }
-            // else {
-            //     red.set_low();
-            // }
-            s1.setup();
-            s2.setup();
-            adc_indexer += 1;
-            adc_indexer %= 5;
+            // s8.set_high();
+            // delay_ms(1);
+            // s8.set_low();
+
+        //     if adc_sum / 5.0 > 1.6 {
+        //         red.set_high();
+        //     } 
+        //     else {
+        //         red.set_low();
+        //     }
+        //     // s1.setup();
+        //     // s2.setup();
+            adc_indexer1 += 1;
+            adc_indexer1 %= 5;
             counter = 0;
         }
         green.toggle();
-        //delay_s(3);
         // red.toggle();
-        //delay_ms(1);
+        delay_ms(1);
         //defmt::info!("toggle leds");
     }
 }
@@ -262,4 +299,3 @@ fn main() -> ! {
         spawner.spawn(async_main(spawner)).unwrap();
     });
 }
-
