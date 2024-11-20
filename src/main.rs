@@ -84,7 +84,7 @@ async fn async_main(spawner: Spawner) {
     unsafe {
         no_deep_sleep_request();
     }
-    //TIM1_CH2_PA9.setup(); //s1 
+    TIM1_CH2_PA9.setup(); //s1 
     //TIM1_CH3_PA10.setup(); // s2 
     TIM3_CH1_PA6.setup(); // s6. chopper frequency. 
     let _ = TIM1.init(Config::default());
@@ -168,43 +168,42 @@ async fn async_main(spawner: Spawner) {
     let mut vbase_sum = 0.0;
     let mut vbase_avg: f64 = 0.0;
 
-    let mut adc_sum_min: f64 = 0.2;
-    let mut adc_sum_max: f64 = 0.2;
+    let mut adc_sum_min: f64 = 3.0;
+    let mut adc_sum_max: f64 = 0.0;
 
-    //measure electrode voltage at start
-    // for i in 0..6 {
-    //     let res = tmp_adc.start_conversion_sw(0);
-    //     let vbase = res as f64 * vref;
-    //     vbase_sum -= adc_values[adc_indexer]; 
-    //     adc_values[adc_indexer] = vbase; 
-    //     vbase_sum += vbase;
-    //     let vbase_avg = vbase_sum;
-    //     defmt::info!("Vbase is {}", vbase_avg * 2.0);
-    // }
+    let mut adc_min: f64 = 3.0;
+    let mut adc_max: f64 = 0.0;
+
+    //let mut extra_count = 0;
 
     
     // measure Rp before stimulation begin
     TIM1_CH2_PA9.setup();
-    TIM1.set_pwm(2, 64000, 63500); //64000, 250Hz; 32000 500Hz; 16000, 1kHz; 3200, 5kHz; 1600, 10kHz; 
-    //TIM1.set_pwm(2, 1600, 800);
+    TIM1.set_pwm(2, 64000, 32000); //64000, 250Hz; 32000 500Hz; 16000, 1kHz; 3200, 5kHz; 1600, 10kHz; 
     TIM1.enable_output(2);
-    // for i in 0..9{
-    //     let res = tmp_adc.start_conversion_sw(5);
-    //     let vpos = res as f64 * vref;
-    //     adc_sum -= adc_values[adc_indexer]; 
-    //     adc_values[adc_indexer] = vpos; 
-    //     adc_sum += vpos;
-    //     defmt::info!("Vtotal is {}", (adc_sum - 0.3)/5.0);
-    //     delay_s(2);
-    //     adc_indexer += 1;
-    //     adc_indexer %= 5;
-    // }
+    for i in 0..9{
+        let res = tmp_adc.start_conversion_sw(5);
+        let vpos = res as f64 * vref;
+        //adc_sum -= adc_values[adc_indexer]; 
+        //adc_values[adc_indexer] = vpos; 
+        //adc_sum += vpos;
+        if adc_max < vpos {
+            adc_max = vpos;
+        }
+        if adc_min > vpos {
+            adc_min = vpos;
+        }
+        //defmt::info!("Vtotal is {}", (adc_sum - 0.3)/5.0);
+        delay_ms(100);
+        //adc_indexer += 1;
+        //adc_indexer %= 5;
+    }
     
     // let Ipos_f64:f64 = Ipos as f64;
-    // let R_total = ((adc_sum - 0.3)/5.0)* 1000.0 * 2.0 / Ipos_f64 ; 
-    // defmt::info!("Rtotal is: {}", R_total);
+    let R_total = (adc_max - adc_min)* 1000.0 * 2.0 / Ipos_f64 ; 
+    defmt::info!("Rtotal is: {}", R_total);
     // s1.setup();
-    let R_total = 710.0;
+    //let R_total = 710.0;
 
     loop {
         // s2.set_high();
@@ -218,10 +217,10 @@ async fn async_main(spawner: Spawner) {
         
         // s4.set_low();
         // s5.set_low();
-        // delay_ms(9);
+        // delay_ms(8);
         // s4.set_high();
         // s5.set_high();
-        // //delay_ms(4);
+        // delay_us(500);
 
         // for i in 0..4{
         //     i2c_send(&mut i2c_plus, POS_DAC_1_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
@@ -235,28 +234,34 @@ async fn async_main(spawner: Spawner) {
         // for i in 0..4 {
         //     i2c_send(&mut i2c_minus, NEG_DAC_2_ADDR, [DAC_REG_BASE + i, Ineg_hex]);
         // }
-    
+        TIM1_CH2_PA9.setup();
+        TIM1.set_pwm(2, 640, 320); //64000, 250Hz; 32000 500Hz; 16000, 1kHz; 3200, 5kHz; 1600, 10kHz; 
+        TIM1.enable_output(2);
         counter += 1;
-        if counter >= 2000 {
-            TIM1_CH2_PA9.setup();
-            TIM1.set_pwm(2, 1600, 800); //64000, 250Hz; 32000 500Hz; 16000, 1kHz; 3200, 5kHz; 1600, 10kHz; 
-            TIM1.enable_output(2);
-            let res1 = tmp_adc.start_conversion_sw(5); 
+        if counter >= 1000 {
+            let res1 = tmp_adc.start_conversion_sw(5); //五次取平均的话，永远没法知道正确的最大值和最小值，因为被“平均”了。只能取值1次。
             let vpos1 = res1 as f64 * vref;
-            adc_sum1 -= adc_values1[adc_indexer1]; 
-            adc_values1[adc_indexer1] = vpos1; 
-            adc_sum1 += vpos1; 
-            if (adc_sum1/5.0) > adc_sum_max {
-                let adc_sum_max = (adc_sum1/5.0);
+            //adc_sum1 -= adc_values1[adc_indexer1]; 
+            //adc_values1[adc_indexer1] = vpos1; //前五次的值太小，没法用
+            //adc_sum1 += vpos1;
+            //defmt::info!("ADC value is {}", adc_sum1/5.0 - 0.07);
+            defmt::info!("ADC value is {}", vpos1);
+            //extra_count += 1;
+            //if extra_count > 4{
+            if vpos1 > adc_sum_max {
+                //adc_sum_max = adc_sum1/5.0;
+                adc_sum_max = vpos1;
                 defmt::info!("max value change");
-                defmt::info!("adc max value is {}.adc min value is {}. adc value is {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
+                defmt::info!("adc max value is {}", adc_sum_max);
             }
-            else if (adc_sum1/5.0) < adc_sum_min {
-                let adc_sum_min = (adc_sum1/5.0);
+            if vpos1 < adc_sum_min {
+                //adc_sum_min = adc_sum1/5.0;
+                adc_sum_min = vpos1;
                 defmt::info!("min value change");
-                defmt::info!("adc max value is {}.adc min value is {}. adc value is {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
+                defmt::info!("adc min value is {}", adc_sum_min);
             }
-           
+            // }
+            defmt::info!("ADC difference is {} - {} = {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
             let Rs = (adc_sum_max - adc_sum_min) * 1000.0 *2.0 / Ipos_f64;
             let Rp = R_total - Rs;
             defmt::info!("Rs is {}", Rs);
@@ -281,12 +286,12 @@ async fn async_main(spawner: Spawner) {
         //     }
         //     // s1.setup();
         //     // s2.setup();
-            adc_indexer1 += 1;
-            adc_indexer1 %= 5;
+            //adc_indexer1 += 1;
+            //adc_indexer1 %= 5;
             counter = 0;
         }
-        green.toggle();
-        // red.toggle();
+        // green.toggle();
+        red.toggle();
         delay_ms(1);
         //defmt::info!("toggle leds");
     }
