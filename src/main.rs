@@ -89,7 +89,6 @@ async fn async_main(spawner: Spawner) {
     unsafe {
         no_deep_sleep_request();
     }
-<<<<<<< HEAD
     //TIM1_CH2_PA9.setup(); //s1 
     // TIM1_CH3_PA10.setup(); // s2 
     // TIM3_CH1_PA6.setup(); // s6. chopper frequency. 
@@ -101,19 +100,6 @@ async fn async_main(spawner: Spawner) {
     //TIM1.enable_output(2);
     //TIM1.enable_output(3);
     // TIM3.enable_output(1);
-=======
-    TIM1_CH2_PA9.setup(); //s1 
-    //TIM1_CH3_PA10.setup(); // s2 
-    TIM3_CH1_PA6.setup(); // s6. chopper frequency. 
-    let _ = TIM1.init(Config::default());
-    let _ = TIM3.init(Config::default());
-    //TIM1.set_pwm(2, 16000, 1600);  // (2, 16000, 1600) 1kHz 100us pulse. (2, 8000, 800) 2kHz 50us pulse. (2, 3200, 320) 5kHz 20us pulse. (2, 1600, 160) 10kHz 10us pulse. 
-    //TIM1.set_pwm(3, 16000, 4000);
-    TIM3.set_pwm(1, 160, 80);
-    //TIM1.enable_output(2);
-    //TIM1.enable_output(3);
-    TIM3.enable_output(1);
->>>>>>> 54bf8adfcd246d9a44922edfb566c40592319909
     clock::set_mco(
         gpio::GPIO_MCO_PA8,
         clock::Mcosel::HSE,
@@ -128,21 +114,12 @@ async fn async_main(spawner: Spawner) {
     s3.set_high(); // pos DAC & capacitor -> Vstm 
     s4.set_high(); //neg DAC power
     s5.set_high(); //pos DAC power 
-<<<<<<< HEAD
     s6.set_low(); //chopper switch
     s7.set_low(); // chopper and filter power
-=======
-    //s6.set_low(); //chopper switch
-    s7.set_high(); // chopper and filter power
->>>>>>> 54bf8adfcd246d9a44922edfb566c40592319909
     s8.set_low(); // 1.5v DC connection
     chopper_input2.set_low();
 
-<<<<<<< HEAD
     let Ipos = 1.0;
-=======
-    let Ipos = 1.2;
->>>>>>> 54bf8adfcd246d9a44922edfb566c40592319909
     let Ipos_f64 = Ipos as f64;
     let Ineg = -1.2;
     let Ipos_hex = utils::cur_coding(Ipos);
@@ -201,7 +178,6 @@ async fn async_main(spawner: Spawner) {
 
     let mut adc_min: f64 = 3.0;
     let mut adc_max: f64 = 0.0;
-<<<<<<< HEAD
     let mut abnormal_counter = 0; 
 
 
@@ -217,28 +193,11 @@ async fn async_main(spawner: Spawner) {
         let res = tmp_adc.start_conversion_sw(5);
         let vpos = res as f64 * vref;
 
-=======
-
-    //let mut extra_count = 0;
-
-    
-    // measure Rp before stimulation begin
-    TIM1_CH2_PA9.setup();
-    TIM1.set_pwm(2, 64000, 32000); //64000, 250Hz; 32000 500Hz; 16000, 1kHz; 3200, 5kHz; 1600, 10kHz; 
-    TIM1.enable_output(2);
-    for i in 0..9{
-        let res = tmp_adc.start_conversion_sw(5);
-        let vpos = res as f64 * vref;
-        //adc_sum -= adc_values[adc_indexer]; 
-        //adc_values[adc_indexer] = vpos; 
-        //adc_sum += vpos;
->>>>>>> 54bf8adfcd246d9a44922edfb566c40592319909
         if adc_max < vpos {
             adc_max = vpos;
         }
         if adc_min > vpos {
             adc_min = vpos;
-<<<<<<< HEAD
         
         }
         defmt::info!("Vmax is {}, Vmin is {}, Difference is {}", adc_max, adc_min, adc_max- adc_min);
@@ -261,20 +220,6 @@ async fn async_main(spawner: Spawner) {
     2500, 2000, 1250, 1000, 667, 625, 500, 
     250, 200, 125, 100, 67, 63, 50];
     
-=======
-        }
-        //defmt::info!("Vtotal is {}", (adc_sum - 0.3)/5.0);
-        delay_ms(100);
-        //adc_indexer += 1;
-        //adc_indexer %= 5;
-    }
-    
-    // let Ipos_f64:f64 = Ipos as f64;
-    let R_total = (adc_max - adc_min)* 1000.0 * 2.0 / Ipos_f64 ; 
-    defmt::info!("Rtotal is: {}", R_total);
-    // s1.setup();
-    //let R_total = 710.0;
->>>>>>> 54bf8adfcd246d9a44922edfb566c40592319909
 
     loop {
         // s2.set_high();
@@ -284,7 +229,6 @@ async fn async_main(spawner: Spawner) {
         // s1.set_high();
         // delay_us(200);
         // s1.set_low();
-<<<<<<< HEAD
         // delay_us(600);
         
         // s1.set_high();;
@@ -441,94 +385,13 @@ async fn async_main(spawner: Spawner) {
                 adc_sum_max = 0.0;
                 adc_sum_min = 3.0;
             }
-=======
-        // delay_us(500);
-        
-        // s4.set_low();
-        // s5.set_low();
-        // delay_ms(8);
-        // s4.set_high();
-        // s5.set_high();
-        // delay_us(500);
-
-        // for i in 0..4{
-        //     i2c_send(&mut i2c_plus, POS_DAC_1_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
-        // }
-        // for i in 0..4{         
-        //     i2c_send(&mut i2c_plus, POS_DAC_2_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
-        // }
-        // for i in 0..4 {
-        //     i2c_send(&mut i2c_minus, NEG_DAC_1_ADDR, [DAC_REG_BASE + i, Ineg_hex]);
-        // }
-        // for i in 0..4 {
-        //     i2c_send(&mut i2c_minus, NEG_DAC_2_ADDR, [DAC_REG_BASE + i, Ineg_hex]);
-        // }
-        TIM1_CH2_PA9.setup();
-        TIM1.set_pwm(2, 640, 320); //64000, 250Hz; 32000 500Hz; 16000, 1kHz; 3200, 5kHz; 1600, 10kHz; 
-        TIM1.enable_output(2);
-        counter += 1;
-        if counter >= 1000 {
-            let res1 = tmp_adc.start_conversion_sw(5); //五次取平均的话，永远没法知道正确的最大值和最小值，因为被“平均”了。只能取值1次。
-            let vpos1 = res1 as f64 * vref;
-            //adc_sum1 -= adc_values1[adc_indexer1]; 
-            //adc_values1[adc_indexer1] = vpos1; //前五次的值太小，没法用
-            //adc_sum1 += vpos1;
-            //defmt::info!("ADC value is {}", adc_sum1/5.0 - 0.07);
-            defmt::info!("ADC value is {}", vpos1);
-            //extra_count += 1;
-            //if extra_count > 4{
-            if vpos1 > adc_sum_max {
-                //adc_sum_max = adc_sum1/5.0;
-                adc_sum_max = vpos1;
-                defmt::info!("max value change");
-                defmt::info!("adc max value is {}", adc_sum_max);
-            }
-            if vpos1 < adc_sum_min {
-                //adc_sum_min = adc_sum1/5.0;
-                adc_sum_min = vpos1;
-                defmt::info!("min value change");
-                defmt::info!("adc min value is {}", adc_sum_min);
-            }
-            // }
-            defmt::info!("ADC difference is {} - {} = {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
-            let Rs = (adc_sum_max - adc_sum_min) * 1000.0 *2.0 / Ipos_f64;
-            let Rp = R_total - Rs;
-            defmt::info!("Rs is {}", Rs);
-            defmt::info!("Rp is {}", Rp);
-            // let C0 = 1e-6;
-            
-            // let tauRC =  (Rs * Rp * Cp)/(Rs + Rp);
-            // let V0 = Ipos* t1/C0;
-            // let I0 = V0/(Rs + Rp);
-            // let base = 1 - Ineg*t1*1e-3/(I0*tauRC);
-            // let t2 = -tauRC*base.ln();
-
-            // s8.set_high();
-            // delay_ms(1);
-            // s8.set_low();
-
-        //     if adc_sum / 5.0 > 1.6 {
-        //         red.set_high();
-        //     } 
-        //     else {
-        //         red.set_low();
-        //     }
-        //     // s1.setup();
-        //     // s2.setup();
->>>>>>> 54bf8adfcd246d9a44922edfb566c40592319909
             //adc_indexer1 += 1;
             //adc_indexer1 %= 5;
             counter = 0;
         }
-<<<<<<< HEAD
         green.toggle();
         // red.toggle();
         delay_ms(10);
-=======
-        // green.toggle();
-        red.toggle();
-        delay_ms(1);
->>>>>>> 54bf8adfcd246d9a44922edfb566c40592319909
         //defmt::info!("toggle leds");
     }
 }
