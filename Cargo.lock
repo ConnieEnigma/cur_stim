@@ -421,6 +421,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d5439c4ad607c3c23abf66de8c8bf57ba8adcd1f129e699851a6e43935d339d"
 
 [[package]]
+name = "numeric-sort"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f218700a47ff14f06bb676b97e63a6fb2fd25db3bf05d6f369971188e303f7f"
+
+[[package]]
 name = "pin-project-lite"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -638,6 +644,7 @@ dependencies = [
  "defmt-rtt",
  "embassy-executor",
  "libm",
+ "numeric-sort",
  "u5-lib",
 ]
 

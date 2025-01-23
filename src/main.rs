@@ -10,6 +10,7 @@ mod utils;
 use core::array;
 use libm::exp;
 use libm::fabs;
+//use numeric_sort::sort;
 //use std::fs::File;
 //use std::io::{self, Write};
 
@@ -26,6 +27,16 @@ use u5_lib::{
 };
 
 //use tim::{Config, TIM1};
+fn bubble_sort<T: Ord>(arr: &mut [T]) {
+    let len = arr.len();
+    for i in 0..len {
+        for j in 0..len - i - 1 {
+            if arr[j] < arr[j + 1] {
+                arr.swap(j, j + 1);
+            }
+        }
+    }
+}
 
 fn i2c_init() -> (I2c, I2c) {
     let i2c_config_plus = i2c::I2cConfig::new(1, 100_000, gpio::I2C1_SCL_PB6, gpio::I2C1_SDA_PB3);
@@ -324,9 +335,14 @@ async fn async_main(spawner: Spawner) {
                     if array_impedance[20] > array_impedance[19]{
                         i = i - 1;
                     } else{
-                        i = 0;
+                        // array_impedance = [735.4932168831016, 735.6396711278014, 733.0034947232025, 724.509148530606, 
+                        // 712.7928089546107, 712.2069919758111, 677.9366987160249, 632.3894286143434, 635.1720592636422, 
+                        // 556.2332213703743, 541.1484341662804, 469.2394000186095, 385.3211178055436, 343.28874957666073, 
+                        // 282.94960076028514, 254.39102304379688, 260.54210132119425, 254.2445687990968, 233.00870331760538, 
+                        // 227.15053352960769, 207.96502747391563];
                         defmt::info!("Final value is {}", array_impedance);
                         delay_s(1);
+                        defmt::info!("Final value is {}", array_impedance);
                         let mut Rs = (array_impedance[18] + array_impedance[19] + array_impedance[20])/3.0;
                         defmt::info!("Rs is {}", Rs);
                         let mut Rp = R_total - Rs;
@@ -335,48 +351,14 @@ async fn async_main(spawner: Spawner) {
                         defmt::info!("Target impedance is {}", target_imp);
                         delay_s(3);
 
-                        let f1 = frequency_divider[0] as f64;
-                        let f2 = frequency_divider[1] as f64;
-                        let mut closest_freq1 = 1000000.0 / f1 ; 
-                        let mut closest_freq2 = 1000000.0 / f2;  
-                        let mut closest_imp1 = array_impedance[0]; 
-                        let mut closest_imp2 = array_impedance[1];
-                        let mut smallest_diff1 =fabs(array_impedance[0] - target_imp);
-                        let mut smallest_diff2 =fabs(array_impedance[1] - target_imp);
-                        let mut closest_i1 = 0;
-                        let mut closest_i2 = 1;
-                        let mut freq1_f64 = frequency_divider[0] as f64;
-                        let mut freq2_f64 = frequency_divider[1] as f64;
-                        for i in 1..21{
-                            let diff = fabs(array_impedance[i] - target_imp);
-                            if diff < smallest_diff1 {
-                                //closest_i1 = i;
-                                smallest_diff1 = diff;
-                                closest_imp1 = array_impedance[i];
-                                freq1_f64 = frequency_divider[i] as f64;
-                                closest_freq1 = 1000000.0 / freq1_f64;
-                            } else if diff < smallest_diff2 {
-                                //closest_i2 = i;
-                                smallest_diff2 = diff;
-                                closest_imp2 = array_impedance[i];
-                                freq2_f64 = frequency_divider[i] as f64;
-                                closest_freq2 = 1000000.0 / freq2_f64;
-                            }
-                        }// find the 2 closest frequency to the target impedance
-                        // After that, reduce the value of the center frequency impedance
-                        //But how much? Is there any equation? 
-
-                        let mut slop = (closest_imp2 - closest_imp1) / (closest_freq2 - closest_freq1);
-                        let mut eq_para  = closest_imp1 - slop * closest_freq1;
-                        let mut fc = (target_imp - eq_para) / slop; 
-
-                        let mut Cp = 1.0 / (2.0 * 3.1415926 * fc * Rp) * 1000000.0;
+                        let (fc, Cp) = utils::capacitor_calculate(&frequency_divider, &array_impedance, Rp, Rs, 1.0);
                         defmt::info!("fc is {:?} Hz", fc);
                         defmt::info!("Cp is {:?} uF", Cp);
                         delay_s(3);
                         ///////////////////////////////////
                         // Change the value to reduce error
                         ///////////////////////////////////
+
                         for i in 0..21{
                             let fix_para = 6.28*Rp*Cp/1000000.0;
                             let mut freq_div_64 = frequency_divider[i] as f64;
@@ -384,7 +366,7 @@ async fn async_main(spawner: Spawner) {
                             let imp_image = fix_para*Rp*freq_64/(1.0 + (fix_para*freq_64)*(fix_para*freq_64));
                             let imp_real = libm::sqrt(array_impedance[i]*array_impedance[i] - imp_image*imp_image);
                             array_impedance_fix[i] = imp_real;
-                        }
+                        }  
                         defmt::info!("Fixed impedance value is {}", array_impedance_fix);
                         delay_s(1);
                         // Need to find the target frequency again. Probably change. 
@@ -395,43 +377,15 @@ async fn async_main(spawner: Spawner) {
                         target_imp = Rp/2.0 + Rs;
                         defmt::info!("Fixed target impedance is {}", target_imp);
 
-
-                        closest_freq1 = 1000000.0 / f1 ; 
-                        closest_freq2 = 1000000.0 / f2;  
-                        closest_imp1 = array_impedance_fix[0]; 
-                        closest_imp2 = array_impedance_fix[1];
-                        smallest_diff1 =fabs(array_impedance_fix[0] - target_imp);
-                        smallest_diff2 =fabs(array_impedance_fix[1] - target_imp);
-                        closest_i1 = 0;
-                        closest_i2 = 1;
-                        for i in 1..21{
-                            let diff = fabs(array_impedance_fix[i] - target_imp);
-                            if diff < smallest_diff1 {
-                                //closest_i1 = i;
-                                smallest_diff1 = diff;
-                                closest_imp1 = array_impedance_fix[i];
-                                freq1_f64 = frequency_divider[i] as f64;
-                                closest_freq1 = 1000000.0 / freq1_f64;
-                            } else if diff < smallest_diff2 {
-                                //closest_i2 = i;
-                                smallest_diff2 = diff;
-                                closest_imp2 = array_impedance_fix[i];
-                                freq2_f64 = frequency_divider[i] as f64;
-                                closest_freq2 = 1000000.0 / freq2_f64;
-                            }
-                        }
-
-                        slop = (closest_imp2 - closest_imp1) / (closest_freq2 - closest_freq1);
-                        eq_para  = closest_imp1 - slop * closest_freq1;
-                        fc = (target_imp - eq_para) / slop;
-                        Cp = 1.0 / (2.0 * 3.1415926 * fc * Rp) * 1000000.0;
+                        let (fc, Cp) = utils::capacitor_calculate(&frequency_divider, &array_impedance_fix, Rp, Rs, 0.0);
+                        
                         defmt::info!("Fixed fc is {:?} Hz", fc);
                         defmt::info!("Fixed Cp is {:?} uF", Cp);
                         delay_s(5);
-                    }
+                    } //The calculation of capacitor is not correct. Need some fix.
                 } else if i == 0{
                     i = i + 1;
-                } else if array_impedance[i] < (array_impedance[i-1]){
+                } else if array_impedance[i] < (array_impedance[i-1]+ i as f64/2.0){
                     i = i + 1;
                 } else {
                     abnormal_counter = abnormal_counter + 1;

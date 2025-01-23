@@ -14,7 +14,7 @@ cortex-m = { version = "0.7.7" }
 # u5-lib = {git = "ssh://git@github.com:22/chen-gz/stm32u5lib.git", features = ["utils"], rev="8fec3af"}
 u5-lib = { git = "ssh://git@github.com:22/chen-gz/stm32u5lib.git", features = ["utils"], rev = "f2679fa", default-features = false }
 libm = "0.2.8"
-
+numeric-sort = "0.1.4"
 
 defmt = "0.3.6"
 defmt-rtt = { version = "0.4.0" }
