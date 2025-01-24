@@ -339,7 +339,19 @@ async fn async_main(spawner: Spawner) {
                         // 712.7928089546107, 712.2069919758111, 677.9366987160249, 632.3894286143434, 635.1720592636422, 
                         // 556.2332213703743, 541.1484341662804, 469.2394000186095, 385.3211178055436, 343.28874957666073, 
                         // 282.94960076028514, 254.39102304379688, 260.54210132119425, 254.2445687990968, 233.00870331760538, 
-                        // 227.15053352960769, 207.96502747391563];
+                        // 227.15053352960769, 207.96502747391563];  //1 uF
+
+                        // array_impedance = [739.4336928110467, 736.5144914971461, 732.135689526295, 722.6482852561177, 
+                        // 719.729083942217, 718.7073634823518, 703.8194367814583, 603.3989115832742, 523.8506757794802, 
+                        // 435.98271623106933, 431.6039142602183, 351.0339579965589, 340.67079333221153, 331.1833890620341, 
+                        // 270.6099617985947, 267.98268061608394, 253.5326341122757, 252.3649535867154, 250.32151266698472, 
+                        // 243.3154295136233, 237.91490708290686];  // 2.2 uF
+
+                        // array_impedance = [729.27328210865, 726.352099324318, 722.846679983118, 702.982637049656, 
+                        // 678.590760800478, 646.603809312036, 554.148374187907, 409.695885502656, 396.696622112376, 
+                        // 334.47542880609, 302.342418178431, 286.714090282251, 273.130590335104, 270.063348411555, 
+                        // 255.603493629108, 247.27812269376, 245.08723560551, 242.604230238828, 239.536988315278, 
+                        // 237.200042087812, 230.33526254463]; // 4.7uF
                         defmt::info!("Final value is {}", array_impedance);
                         delay_s(1);
                         defmt::info!("Final value is {}", array_impedance);
@@ -382,6 +394,41 @@ async fn async_main(spawner: Spawner) {
                         defmt::info!("Fixed fc is {:?} Hz", fc);
                         defmt::info!("Fixed Cp is {:?} uF", Cp);
                         delay_s(5);
+
+                        for c in 0..3 {
+                            for i in 0..21{
+                                let fix_para = 6.28*Rp*Cp/1000000.0;
+                                let mut freq_div_64 = frequency_divider[i] as f64;
+                                let freq_64 = 1000000.0 / freq_div_64;  
+                                let imp_image = fix_para*Rp*freq_64/(1.0 + (fix_para*freq_64)*(fix_para*freq_64));
+                                let imp_real = libm::sqrt(array_impedance_fix[i]*array_impedance_fix[i] - imp_image*imp_image);
+                                array_impedance_fix[i] = imp_real;
+                            }  
+                            let n = array_impedance_fix.len();
+                            for a in 0..n {
+                                for b in 0..n - 1 - a {
+                                    if array_impedance_fix[b] < array_impedance_fix[b + 1] {
+                                    array_impedance_fix.swap(b, b + 1);
+                                    }
+                                }
+                            }
+                            defmt::info!("Fixed impedance value is {}", array_impedance_fix);
+                            delay_s(1);
+                            // defmt::info!("Fixed impedance value is {}", array_impedance_fix);
+                            // Need to find the target frequency again. Probably change. 
+                            Rs = (array_impedance_fix[18] + array_impedance_fix[19] + array_impedance_fix[20])/3.0;
+                            defmt::info!("Fixed Rs is {}", Rs);
+                            Rp = R_total - Rs;
+                            defmt::info!("Fixed Rp is {}", Rp);
+                            target_imp = Rp/2.0 + Rs;
+                            defmt::info!("Fixed target impedance is {}", target_imp);
+    
+                            let (fc, Cp) = utils::capacitor_calculate(&frequency_divider, &array_impedance_fix, Rp, Rs, 0.0);
+                            
+                            defmt::info!("Fixed fc is {:?} Hz", fc);
+                            defmt::info!("Fixed Cp is {:?} uF", Cp);
+                            delay_s(5);
+                        }
                     } //The calculation of capacitor is not correct. Need some fix.
                 } else if i == 0{
                     i = i + 1;
