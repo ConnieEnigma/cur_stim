@@ -78,9 +78,9 @@ pub fn capacitor_calculate(arr1: &[u16], arr2: &[f64], val1: f64, val2: f64, val
     defmt::info!("closet imp1:{}, closet imp2: {}", closest_imp1, closest_imp2);
     defmt::info!("closet freq1:{}, closet freq2: {}", closest_freq1, closest_freq2);
     let base:f64 = 10.0;
-    let slope:f64 = (closest_imp2 - closest_imp1) / (log10(closest_freq2) - log10(closest_freq1));
-    let eq_para:f64 = closest_imp1 - slope * log10(closest_freq1); 
-    let fc:f64 = pow(base, (target_imp - eq_para)/slope);
+    let slope:f64 = (closest_imp2 - closest_imp1) / (closest_freq2 - closest_freq1));
+    let eq_para:f64 = closest_imp1 - slope * closest_freq1; 
+    let fc:f64 = (target_imp - eq_para)/slope)*0.8;
     let cap = (1.0 / (2.0 * 3.1415926 * fc * val1))* 1000000.0;//The first capacitor value must be too small. Need fix
     (fc, cap)
 }
