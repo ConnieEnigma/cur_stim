@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
       {
-        // "preLaunchTask": "rust: cargo build",
+        "preLaunchTask": "rust: cargo build",
         "type": "probe-rs-debug",
         "request": "launch",
         "name": "probe_rs sd_cam launch example",
@@ -14,7 +14,7 @@
         "runtimeExecutable": "probe-rs",
         "runtimeArgs": ["dap-server"],
         //!MODIFY
-        "chip": "STM32U575ZITxQ",
+        "chip": "STM32U575CIUxQ",
         "flashingConfig": {
           "flashingEnabled": true,
           "haltAfterReset": false,
@@ -27,9 +27,9 @@
           {
             "coreIndex": 0,
             //!MODIFY
-            "programBinary": "/home/zong/Code/u5_example/target/thumbv8m.main-none-eabihf/debug/u5_example",
+            "programBinary": "C:\\Users\\Connie\\OneDrive\\Documents\\cur_stim\\target\\thumbv8m.main-none-eabihf/debug/u5_example",
             //!MODIFY
-            "svdFile": "stm32u5a5.svd",
+            "svdFile": "stm32u575.svd",
             "rttEnabled": true
           }
         ],

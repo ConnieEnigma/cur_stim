@@ -10,20 +10,41 @@ edition = "2021"
 
 [dependencies]
 cortex-m = { version = "0.7.7" }
-# u5-lib = {git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git", features = ["utils"], rev= "c7bbfd1593"}
-# u5-lib = {git = "ssh://git@github.com:22/chen-gz/stm32u5lib.git", features = ["utils"], rev="8fec3af"}
-u5-lib = { git = "ssh://git@github.com:22/chen-gz/stm32u5lib.git", features = ["utils"], rev = "f2679fa", default-features = false }
 libm = "0.2.8"
 numeric-sort = "0.1.4"
-
 defmt = "0.3.6"
 defmt-rtt = { version = "0.4.0" }
 cortex-m-rt = { version = "0.7.3", default-features = false }
+# u5-lib = {git = "ssh://gitea@git.ggeta.com:2002/guangzong/u5_new.git", features = ["utils"], rev= "c7bbfd1593"}
+# u5-lib = {git = "ssh://git@github.com:22/chen-gz/stm32u5lib.git", features = ["utils"], rev="8fec3af"}
+# u5-lib = { git = "ssh://git@github.com:22/chen-gz/stm32u5lib.git", features = ["utils"], rev = "f2679fa", default-features = false }
+#u5-lib = { git = "https://github.com/chen-gz/stm32u5lib.git", features = [
+#    "utils",
+#    # "stm32u5a5zj",
+#    "stm32u575zi",
+#], rev="eb8ac12", default-features = false }
+
+u5-lib = { git = "https://github.com/chen-gz/stm32u5lib.git", features = [
+    "utils",
+    "stm32u575zi",
+], branch = "dev", default-features = false }
+
+
 
 [dependencies.embassy-executor]
 features = ["nightly", "arch-cortex-m", "executor-thread"]
 git = "https://github.com/embassy-rs/embassy"
-rev = "35f284e"
+rev = "32cff65"
+# rev = "35f284e"
+[dependencies.embassy-sync]
+git = "https://github.com/embassy-rs/embassy"
+rev = "32cff65"
+
+# [dependencies.stm32-metapac]
+# #path = "../stm32-data/build/stm32-metapac"
+# git = "https://gitea.ggeta.com/guangzong/stm32-data-generated"
+# features = ["rt"]
+# rev = "a3820c27dc"
 
 # disable all optimizations
 [profile.dev]
@@ -34,4 +55,5 @@ debug = true
 stm32u575zi = ["u5-lib/stm32u575zi"]
 stm32u5a5zj = ["u5-lib/stm32u5a5zj"]
 stm32u575ci = ["u5-lib/stm32u575ci"]
-default = ["stm32u575ci"]
+# default = ["stm32u5a5zj"]
+default = ["stm32u575zi"]
