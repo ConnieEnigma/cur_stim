@@ -437,7 +437,6 @@ async fn async_main(spawner: Spawner) {
                             defmt::info!("Fixed Rp is {}", Rp);
                             target_imp = Rp/2.0 + Rs;
                             defmt::info!("Fixed target impedance is {}", target_imp);
-
                             let (fc, Cp) = utils::capacitor_calculate(&frequency_divider, &array_impedance_fix, Rp, Rs, 0.0);
                             
                             defmt::info!("Fixed fc is {:?} Hz", fc);

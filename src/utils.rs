@@ -111,7 +111,6 @@ pub fn capacitor_calculate(arr1: &[u16], arr2: &[f64], val1: f64, val2: f64, val
     closest_imp1, closest_imp2, closest_imp3);
     defmt::info!("closest freq1:{}, closest freq2: {}, closest freq3:{}", 
     closest_freq1, closest_freq2, closest_freq3);
-
     let points = [
         Point { x: closest_freq1, y: closest_imp1 },
         Point { x: closest_freq2, y: closest_imp2 },
@@ -131,3 +130,16 @@ pub fn capacitor_calculate(arr1: &[u16], arr2: &[f64], val1: f64, val2: f64, val
     
     (fc, cap)
 }
+
+// pub fn linear_regression(points: &[Point]) -> (f64, f64) {
+//     let n = points.len() as f64;
+//     let sum_x: f64 = points.iter().map(|p| p.x).sum();
+//     let sum_y: f64 = points.iter().map(|p| p.y).sum();
+//     let sum_xx: f64 = points.iter().map(|p| p.x * p.x).sum();
+//     let sum_xy: f64 = points.iter().map(|p| p.x * p.y).sum();
+
+//     let slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+//     let intercept = (sum_y - slope * sum_x) / n;
+
+//     (slope, intercept)
+// }
