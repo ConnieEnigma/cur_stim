@@ -3,6 +3,8 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 #![feature(impl_trait_in_assoc_type)]
+#![allow(non_snake_case)]
+#![allow(unused)]
 
 use cortex_m::delay;
 use defmt_rtt as _;
@@ -10,8 +12,9 @@ use embassy_executor::Spawner;
 use libm;
 mod utils;
 use core::array;
-use libm::exp;
-use libm::fabs;
+//use libm::exp;
+use libm::log;
+//use libm::fabs;
 //use numeric_sort::sort;
 //use std::fs::File;
 //use std::io::{self, Write};
@@ -29,16 +32,6 @@ use u5_lib::{
 };
 
 //use tim::{Config, TIM1};
-fn bubble_sort<T: Ord>(arr: &mut [T]) {
-    let len = arr.len();
-    for i in 0..len {
-        for j in 0..len - i - 1 {
-            if arr[j] < arr[j + 1] {
-                arr.swap(j, j + 1);
-            }
-        }
-    }
-}
 
 fn i2c_init() -> (I2c, I2c) {
     let i2c_config_plus = i2c::I2cConfig::new(1, 100_000, gpio::I2C1_SCL_PB6, gpio::I2C1_SDA_PB3);
@@ -237,12 +230,12 @@ async fn async_main(spawner: Spawner) {
     320, 250, 200, 125, 100, 79, 63, 50,
     32, 25, 20, 13, 10, 8, 6, 5];
     
-    let mut t1 = 100; //unit is us
-    let mut t2 = 500; //unit is us 
+    let mut t1 = 1000; //unit is us
+    let mut t2 = 1200; //unit is us 
     let mut tauRC = 0.0;
 
     let mut Rs = 200.0; //unit is ohm
-    let mut Rp = 500.0; //unit is ohm
+    let mut Rp = 1000.0; //unit is ohm
     let mut Cp = 1.0; //unit is uF
     let mut V0 = 0.0;
     let mut I0 = 0.0;
@@ -444,20 +437,20 @@ async fn async_main(spawner: Spawner) {
                             delay_s(5); 
                         }
                         /////////////////////////////////////////////////////////////
-                        /// calculate the pulse length according to impedance////////
+                        ///calculate the pulse length according to impedance/////////
                         /////////////////////////////////////////////////////////////
                         let t1_f64 = t1 as f64;
                         defmt::info!("Rs={}, Rp={}, Cp={}", Rs, Rp, Cp);
                         delay_s(1);
                         tauRC =  (Rs * Rp * Cp*1e-6)/(Rs + Rp); //verify it again
                         defmt::info!("Tau is {}", tauRC);
-                        let V0 :f64 = Ipos_f64*1e-3 * t1_f64 / Cp; //V0太小了，为啥
+                        let V0 :f64 = Ipos_f64 * t1_f64 * 1e-2; //V0太小了，为啥
                         defmt::info!("V0 is {}", V0);
                         let I0 = V0 / (Rs + Rp);
                         defmt::info!("I0 is {}", I0);
                         let base :f64 = 1.0 - Ineg_f64* 1e-3* t1_f64 *1e-6 / (I0 * tauRC);
                         defmt::info!("Base is {}", base);
-                        let t2_f64 = -tauRC * exp(base)*1000000.0;
+                        let t2_f64 = -tauRC * log(base)*1000000.0;
                         t2 = t2_f64 as u32;
                         defmt::info!("t2 is {}", t2);
                 //    } //The calculation of capacitor is not correct. Need some fix.

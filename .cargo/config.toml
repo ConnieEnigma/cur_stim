@@ -1,5 +1,5 @@
 [target.thumbv8m.main-none-eabihf]
-runner = "probe-rs run --chip STM32U575ZITxQ"
+runner = "probe-rs run --chip STM32U575CIUxQ"
 [build]
 target = "thumbv8m.main-none-eabihf"
 [env]

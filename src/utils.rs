@@ -31,9 +31,9 @@ pub fn capacitor_calculate(arr1: &[u16], arr2: &[f64], val1: f64, val2: f64, val
     let mut closest_imp1 = arr2[0]; // Initialize with the first impedance
     let mut closest_imp2 = arr2[1]; // Initialize with the second impedance
     let mut closest_imp3 = arr2[2]; // Initialize with the second impedance
-    let mut smallest_diff1 = (arr2[0] - target_imp); 
-    let mut smallest_diff2 = (arr2[1] - target_imp); 
-    let mut smallest_diff3 = (arr2[2] - target_imp);
+    let mut smallest_diff1 = arr2[0] - target_imp;
+    let mut smallest_diff2 = arr2[1] - target_imp;
+    let mut smallest_diff3 = arr2[2] - target_imp;
     let mut temp = 0.0;
     if arr2[0] - target_imp < 0.0{
         let smallest_diff1 = target_imp - arr2[0];
@@ -125,7 +125,7 @@ pub fn capacitor_calculate(arr1: &[u16], arr2: &[f64], val1: f64, val2: f64, val
     let slope: f64 = (3.0 * sum_xy - sum_x * sum_y) / (3.0 * sum_xx - sum_x * sum_x);
     let intercept = (sum_y - slope * sum_x) / 3.0;
 
-    let fc:f64 = ((target_imp - intercept)/slope)* 0.9;
+    let fc:f64 = ((target_imp - intercept)/slope) - 50.0;
     let cap = (1.0 / (2.0 * 3.1415926 * fc * val1))* 1000000.0;//The first capacitor value must be too small. Need fix
     
     (fc, cap)
