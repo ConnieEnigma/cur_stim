@@ -123,12 +123,14 @@ pub fn capacitor_calculate(arr1: &[u16], arr2: &[f64], val1: f64, val2: f64, val
     let sum_xy: f64 = points.iter().map(|p| p.x * p.y).sum();
 
     let slope: f64 = (3.0 * sum_xy - sum_x * sum_y) / (3.0 * sum_xx - sum_x * sum_x);
-    let intercept = (sum_y - slope * sum_x) / 3.0;
+    let intercept = (sum_y - slope * sum_x) / 3.0; 
 
-    let fc:f64 = ((target_imp - intercept)/slope) - 50.0;
-    let cap = (1.0 / (2.0 * 3.1415926 * fc * val1))* 1000000.0;//The first capacitor value must be too small. Need fix
+    let fc:f64 = ((target_imp - intercept)/slope);
+    let log_fc = log10(fc) - 0.4;
+    let fixed_fc = pow(10.0,log_fc );
+    let cap = (1.0 / (2.0 * 3.1415926 * fixed_fc * val1))* 1000000.0;//The first capacitor value must be too small. Need fix
     
-    (fc, cap)
+    (fixed_fc, cap)
 }
 
 // pub fn linear_regression(points: &[Point]) -> (f64, f64) {
