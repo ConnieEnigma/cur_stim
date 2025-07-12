@@ -1,18 +1,19 @@
-#![feature(noop_waker)]
+// #![feature(noop_waker)]
 #![no_std]
 #![no_main]
-#![feature(type_alias_impl_trait)]
-#![feature(impl_trait_in_assoc_type)]
+// #![feature(type_alias_impl_trait)]
+// #![feature(impl_trait_in_assoc_type)]
 #![allow(non_snake_case)]
 #![allow(unused)]
-#![feature(new_range_api)]
+// #![feature(new_range_api)]
 
 use cortex_m::delay;
 use defmt_rtt as _;
 use embassy_executor::Spawner;
 use libm;
 mod utils;
-use core::{array, range};
+// use core::{array, range};
+use core::array;
 //use libm::exp;
 use libm::log;
 //use libm::fabs;
@@ -21,26 +22,21 @@ use libm::log;
 //use std::io::{self, Write};
 
 use u5_lib::{
-    clock::{self, delay_ms, delay_s, delay_us},
-    com_interface::ComInterface,
-    exti,
-    gpio::{self, GpioPort,  TIM1_CH2_PA9, TIM1_CH3_PA10, TIM3_CH1_PA6},
-    i2c::{self, I2c},
-    low_power::{no_deep_sleep_request, Executor},
-    task,
-    tim::{Config, TIM1, TIM3},
-    *,
+    clock::{self, delay_ms, delay_s, delay_us}, exti, gpio::{self, GpioPort, I2C1_SCL_PB6, I2C1_SDA_PB3, TIM1_CH2_PA9, TIM1_CH3_PA10, TIM3_CH1_PA6}, hal::I2c,  low_power::{no_deep_sleep_request, Executor}, task, tim::{Config, TIM1, TIM3}, *
 };
 
 //use tim::{Config, TIM1};
 
-fn i2c_init() -> (I2c, I2c) {
-    let i2c_config_plus = i2c::I2cConfig::new(1, 100_000, gpio::I2C1_SCL_PB6, gpio::I2C1_SDA_PB3);
-    let i2c_plus = I2c::new(i2c_config_plus).unwrap();
-    let i2c_config_minus = i2c::I2cConfig::new(2, 100_000, gpio::I2C2_SCL_PB13, gpio::I2C2_SDA_PB14);
-    let i2c_minus = I2c::new(i2c_config_minus).unwrap();
-    (i2c_plus, i2c_minus)
-}
+// fn i2c_init() -> (dyn I2c, I2c) {
+//     // let i2c_config_plus = i2c::I2cConfig::new(1, 100_000, gpio::I2C1_SCL_PB6, gpio::I2C1_SDA_PB3);
+//     // let i2c_plus = I2c::new(i2c_config_plus).unwrap();
+
+//     // let i2c_config_minus = i2c::I2cConfig::new(2, 100_000, gpio::I2C2_SCL_PB13, gpio::I2C2_SDA_PB14);
+//     // let i2c_minus = I2c::new(i2c_config_minus).unwrap();
+//     let i2c_plus = I2c::new(hal::I2cFrequency::Freq100khz, I2C1_SDA_PB3, I2C1_SCL_PB6).unwrap();
+//     let i2c_minus = I2c::new(hal::I2cFrequency::Freq100khz, gpio::I2C2_SDA_PB14, gpio::I2C2_SCL_PB13).unwrap();
+//     (i2c_plus, i2c_minus)
+// }
 fn switch_led_setup() -> ( gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio::GpioPort,
     gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio::GpioPort){
     let red: gpio::GpioPort = gpio::PB7;
@@ -73,13 +69,14 @@ fn switch_led_setup() -> ( gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio:
 
 }
 
-fn i2c_send( i2c:&mut I2c, addr: u16, mut data: [u8; 2]) {
-    let i2c_message = i2c::I2cMessage {
-        addr,
-        data:&mut data,
-    };
-    i2c.send(&i2c_message).unwrap();
-}
+// fn i2c_send( i2c:&mut I2c, addr: u16, mut data: [u8; 2]) {
+//     // let i2c_message = i2c::I2cMessage {
+//     //     addr,
+//     //     data:&mut data,
+//     // };
+//     // i2c.send(&i2c_message).unwrap();
+//     i2c.write(addr, data);
+// }
 
 struct Point {
     x: f64,
@@ -95,7 +92,8 @@ const DAC_REG_BASE: u8 = 0xF8;
 async fn async_main(spawner: Spawner) {
     // be careful, if the dbg is not enabled, but using deep sleep. This framework will not able to connect to chip.
     // stm32cube programmer, stmcubeide can be used to program the chip, then this framework can be used to debug.
-    clock::init_clock(true, true,  16_000_000, true, clock::ClockFreqs::KernelFreq1Mhz);
+    // clock::init_clock(true, true,  16_000_000, true, clock::ClockFreqs::KernelFreq1Mhz);
+    clock::init_clock(true, clock::ClockFreqs::KernelFreq1Mhz);
     unsafe {
         no_deep_sleep_request();
     }
@@ -140,18 +138,23 @@ async fn async_main(spawner: Spawner) {
     let Ipos_hex = utils::cur_coding(Ipos);
     let Ineg_hex = utils::cur_coding(Ineg);
 
-    let (mut i2c_plus, mut i2c_minus) = i2c_init();
+    // let (mut i2c_plus, mut i2c_minus) = i2c_init();
+    let i2c_plus: u5_lib::i2c::I2c = I2c::new(hal::I2cFrequency::Freq100khz, I2C1_SDA_PB3, I2C1_SCL_PB6).unwrap();
+    let i2c_minus: u5_lib::i2c::I2c = I2c::new(hal::I2cFrequency::Freq100khz, gpio::I2C2_SDA_PB14, gpio::I2C2_SCL_PB13).unwrap();
     for i in 0..4{
-        i2c_send(&mut i2c_plus, POS_DAC_1_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
+        // i2c_send(&mut i2c_plus, POS_DAC_1_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
+        i2c_plus.write(POS_DAC_1_ADDR, &[DAC_REG_BASE + i, Ipos_hex]);
     }
     for i in 0..4{         
-        i2c_send(&mut i2c_plus, POS_DAC_2_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
+        // i2c_send(&mut i2c_plus, POS_DAC_2_ADDR, [DAC_REG_BASE + i, Ipos_hex]);
+        i2c_plus.write(POS_DAC_2_ADDR, &[DAC_REG_BASE + i, Ipos_hex]);
+
     }
     for i in 0..4 {
-        i2c_send(&mut i2c_minus, NEG_DAC_1_ADDR, [DAC_REG_BASE + i, Ineg_hex]);
+        i2c_minus.write(NEG_DAC_1_ADDR, &[DAC_REG_BASE + i, Ineg_hex]);
     }
     for i in 0..4 {
-        i2c_send(&mut i2c_minus, NEG_DAC_2_ADDR, [DAC_REG_BASE + i, Ineg_hex]);
+        i2c_minus.write(NEG_DAC_2_ADDR, &[DAC_REG_BASE + i, Ineg_hex]);
     }
     defmt::info!("i2c finished!");
 
