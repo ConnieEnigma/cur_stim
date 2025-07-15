@@ -41,8 +41,6 @@
           ] ++ lib.optional stdenv.isLinux udev;
 
           shellHook = ''
-            export VIRTUAL_ENV_PROMPT="(nix) ";
-            export XDG_CONFIG_HOME="$(pwd)/.config";
             exec fish
           '';
 
