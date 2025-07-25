@@ -1,0 +1,98 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "cargo-binutils": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#cargo-binutils",
+      "source": "nixpkg"
+    },
+    "curl": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#curl",
+      "source": "nixpkg"
+    },
+    "fish": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#fish",
+      "source": "nixpkg"
+    },
+    "gcc": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#gcc",
+      "source": "nixpkg"
+    },
+    "git": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#git",
+      "source": "nixpkg"
+    },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2025-07-24T23:24:55Z",
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?lastModified=1753399495&narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D"
+    },
+    "gnumake": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#gnumake",
+      "source": "nixpkg"
+    },
+    "libusb1": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#libusb1",
+      "source": "nixpkg"
+    },
+    "openssl": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#openssl",
+      "source": "nixpkg"
+    },
+    "pkg-config": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#pkg-config",
+      "source": "nixpkg"
+    },
+    "probe-rs": {
+      "resolved": "github:NixOS/nixpkgs/0d00f23f023b7215b3f1035adb5247c8ec180dbc?narHash=sha256-7XG%2FQBqhrYOyA2houjRTL2NMa7IKZZ%2FsomBqr%2BQ%2F6Wo%3D#probe-rs",
+      "source": "nixpkg"
+    },
+    "rustup@latest": {
+      "last_modified": "2025-07-13T22:45:35Z",
+      "plugin_version": "0.0.1",
+      "resolved": "github:NixOS/nixpkgs/a421ac6595024edcfbb1ef950a3712b89161c359#rustup",
+      "source": "devbox-search",
+      "version": "1.28.2",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cm002v6ahmbvg813mawx1jfyshyc6kvz-rustup-1.28.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/cm002v6ahmbvg813mawx1jfyshyc6kvz-rustup-1.28.2"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vdgmci02cp2wqqp3l7mnv5s4xmzlmcia-rustup-1.28.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/vdgmci02cp2wqqp3l7mnv5s4xmzlmcia-rustup-1.28.2"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/swyqkqsn1ky5g1a4wpw1rc4wn1kplsg7-rustup-1.28.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/swyqkqsn1ky5g1a4wpw1rc4wn1kplsg7-rustup-1.28.2"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/rnf8wb305f8508hnkjgi0i3vy2522b5w-rustup-1.28.2",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/rnf8wb305f8508hnkjgi0i3vy2522b5w-rustup-1.28.2"
+        }
+      }
+    }
+  }
+}

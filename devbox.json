@@ -1,0 +1,21 @@
+{
+  "packages": [
+    "curl",
+    "git",
+    "gcc",
+    "pkg-config",
+    "libusb1",
+    "openssl",
+    "fish",
+    "gnumake",
+    "cargo-binutils",
+    "probe-rs",
+    "rustup@latest"
+  ],
+  "shell": {
+    "init_hook": "rustup install 1.88.0 && rustup default 1.88.0 && rustup component add rust-src rust-analyzer llvm-tools-preview && rustup target add thumbv8m.main-none-eabihf",
+    "env": {
+      "RUST_BACKTRACE": "1"
+    }
+  }
+}
