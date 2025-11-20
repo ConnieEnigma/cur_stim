@@ -32,13 +32,14 @@ u5-lib = { git = "https://github.com/chen-gz/stm32u5lib.git", features = [
 
 
 [dependencies.embassy-executor]
-features = ["nightly", "arch-cortex-m", "executor-thread"]
-git = "https://github.com/embassy-rs/embassy"
-rev = "32cff65"
+features = [ "arch-cortex-m", "executor-thread"]
+# git = "https://github.com/embassy-rs/embassy"
+version = "0.9.1"
+# rev = "32cff65"
 # rev = "35f284e"
 [dependencies.embassy-sync]
 git = "https://github.com/embassy-rs/embassy"
-rev = "32cff65"
+# rev = "32cff65"
 
 # [dependencies.stm32-metapac]
 # #path = "../stm32-data/build/stm32-metapac"
