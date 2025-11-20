@@ -6,21 +6,30 @@ struct Point {
 }
 
 /// the input is `val` mA
-pub fn cur_coding(val: f32) -> u8 {
-    // 800 uA  each bit
-    // let ret = abs(val) / 1.6 * 127.0;
-    let tmpv = if val > 0.0 { val } else { -val };
-    let ret = tmpv / 1.6 * 127.0;
-    let mut ret: u8 = (ret + 0.5) as u8;
-    if val > 0.0 {
-        ret |= 1 << 7;
-    }
+pub fn cur_coding(val: f32, pos_range:f32, neg_range:f32) -> u8 {
+    // let tmpv = if val > 0.0 { val } else { -val };
+    // let ret = tmpv / 1.89 * 127.0;
+    // let mut ret: u8 = ret as u8;
+    // if val > 0.0 {
+    //     ret |= 1 << 7;
+    // }
+    // ret = ret.reverse_bits();
+    // return ret;
+
+    let clamped_input = val.clamp(neg_range, pos_range);
+    let range_span = pos_range - neg_range; 
+    let offset_input = clamped_input - neg_range;
+    let scale_factor = 255.0 / range_span;
+    let scaled = offset_input * scale_factor;
+    let mut ret = scaled as u8;
+    ret = ret.reverse_bits();
     return ret;
 }
 
 
 pub fn capacitor_calculate(arr1: &[u16], arr2: &[f64], val1: f64, val2: f64, val3:f64) -> (f64, f64) {
-    let target_imp:f64 = val1/2.0 + val2;
+    //let target_imp:f64 = val1/2.0 + val2;
+    let target_imp:f64 = (val1 + val2)*0.9568;
    // defmt::info!("target imp: {}", target_imp);
     let f1 = arr1[0] as f64;
     let f2 = arr1[1] as f64;
@@ -126,11 +135,14 @@ pub fn capacitor_calculate(arr1: &[u16], arr2: &[f64], val1: f64, val2: f64, val
     let intercept = (sum_y - slope * sum_x) / 3.0; 
 
     let fc:f64 = ((target_imp - intercept)/slope);
-    let log_fc = log10(fc) - 0.4;
-    let fixed_fc = pow(10.0,log_fc );
-    let cap = (1.0 / (2.0 * 3.1415926 * fixed_fc * val1))* 1000000.0;//The first capacitor value must be too small. Need fix
+    //let log_fc = log10(fc) - val3;
+    //let fixed_fc = pow(10.0,log_fc );
+    //let cap = (1.0 / (2.0 * 3.1415926 * fixed_fc * val1))* 1000000.0;//The first capacitor value must be too small. Need fix
+    let cap = (1.0 / (2.0 * 3.1415926 * fc * val1))* 1000000.0;
+
     
-    (fixed_fc, cap)
+    //(fixed_fc, cap)
+    (fc, cap)
 }
 
 // pub fn linear_regression(points: &[Point]) -> (f64, f64) {
