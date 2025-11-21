@@ -88,7 +88,7 @@ const NEG_DAC_1_ADDR: u16  = 0xA0;
 const NEG_DAC_2_ADDR: u16  = 0xE0;
 const DAC_REG_BASE: u8 = 0xF8;
 
-#[task]
+#[embassy_executor::task]
 async fn async_main(spawner: Spawner) {
     // be careful, if the dbg is not enabled, but using deep sleep. This framework will not able to connect to chip.
     // stm32cube programmer, stmcubeide can be used to program the chip, then this framework can be used to debug.
