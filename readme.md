@@ -60,6 +60,7 @@ Then we can flash and run with:
 cargo run --features "stm32u575ci"
 ```
 
+Run `cargo bin` to get the release version binary file for flash.  To flash only need to drag .bin file to the folder which appear after plugin the stlink.
 
 
 

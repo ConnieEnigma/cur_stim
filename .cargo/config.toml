@@ -4,3 +4,11 @@ runner = "probe-rs run --chip STM32U575CIUxQ"
 target = "thumbv8m.main-none-eabihf"
 [env]
 DEFMT_LOG = "info"
+
+[alias]
+# 创建一个新命令 'cargo bin'
+# 注意：cargo objcopy 会自动先调用 cargo build，所以不需要手动 build
+bin = "objcopy --release --bin u5_example -- -O binary u5_example.bin"
+
+# 如果你也想在 debug 模式下用，可以加一个
+bin-debug = "objcopy --bin u5_example -- -O binary u5_example.bin"
