@@ -1,12 +1,15 @@
+#![feature(noop_waker)]
 #![no_std]
 #![no_main]
+#![feature(type_alias_impl_trait)]
+#![feature(impl_trait_in_assoc_type)]
 #![allow(non_snake_case)]
 #![allow(unused)]
 
 
 use cortex_m::delay;
 use defmt_rtt as _;
-// use embassy_executor::Spawner;
+use embassy_executor::Spawner;
 use libm;
 mod utils;
 use core::array;
@@ -19,6 +22,7 @@ use libm::exp;
 
 use u5_lib::{
     clock::{self, delay_ms, delay_s, delay_us, delay_tick, hclk_request},
+    com_interface::ComInterface,
     exti,
     gpio::{self, GpioPort, TIM3_CH1_PB4, TIM3_CH4_PB1},
     // i2c::{self, I2c},
@@ -142,7 +146,7 @@ struct Point {
     y: f64,
 }
 
-#[embassy_executor::task]
+#[task]
 async fn async_main(spawner: Spawner) {
     // be careful, if the dbg is not enabled, but using deep sleep. This framework will not able to connect to chip.
     // stm32cube programmer, stmcubeide can be used to program the chip, then this framework can be used to debug.
@@ -226,11 +230,7 @@ async fn async_main(spawner: Spawner) {
     defmt::info!("Vref init! {}", vref);
     delay_s(1);
     ////////////////////////////////////////////
-
-    
-    
    
-
     let mut Rs = 200.0; //unit is ohm
     let mut Rp = 1000.0; //unit is ohm
     let mut Cp = 1.0; //unit is uF
@@ -238,10 +238,17 @@ async fn async_main(spawner: Spawner) {
     let mut V0 = 0.0;
     let mut I0 = 0.0;
 
+    let mut Rs2 = 200.0; //unit is ohm
+    let mut Rp2 = 1000.0; //unit is ohm
+    let mut Cp2 = 1.0; //unit is uF
+    let mut fc2 = 10.0;
+    let mut V02 = 0.0;
+    let mut I02 = 0.0;
+
 
     ///////////DAC 0///////////////////
     let DAC_data_pos0: f32 = 1.0; //
-    let DAC_data_neg0: f32 = -0.5;
+    let DAC_data_neg0: f32 = -0.8;
     let DAC_max_pos0:f32 = 1.25; //0.83
     let DAC_max_neg0:f32 = -1.25; //-0.91
     let mut Ipos_hex = utils::cur_coding(DAC_data_pos0, DAC_max_pos0, DAC_max_neg0);
@@ -301,8 +308,8 @@ async fn async_main(spawner: Spawner) {
 
     let DAC_data_pos1 = 0.0;
     let DAC_data_neg1 = -0.0;
-    let DAC_max_pos1 = 1.04; //0.48
-    let DAC_max_neg1:f32 = -1.04; //-0.55
+    let DAC_max_pos1 = 1.0; //1.04
+    let DAC_max_neg1:f32 = -1.0; //-1.04
     Ipos_hex = utils::cur_coding(DAC_data_pos1, DAC_max_pos1, DAC_max_neg1);
     Ineg_hex = utils::cur_coding(DAC_data_neg1, DAC_max_pos1, DAC_max_neg1);
 
@@ -423,8 +430,8 @@ async fn async_main(spawner: Spawner) {
     ///////////////DAC 3 /////////////////
     let DAC_data_pos3 = 0.0;
     let DAC_data_neg3 = -0.0;
-    let DAC_max_pos3 = 1.0; //0.46 
-    let DAC_max_neg3: f32 = -1.06; //-0.35
+    let DAC_max_pos3 = 1.0; //
+    let DAC_max_neg3: f32 = -1.0; //-1.06
     Ipos_hex = utils::cur_coding(DAC_data_pos3, DAC_max_pos3, DAC_max_neg3);
     Ineg_hex = utils::cur_coding(DAC_data_neg3, DAC_max_pos3, DAC_max_neg3);
     defmt::info!("DAC3 Ipos hex is 0x{:X}. Ineg_hex is 0x{:X}", Ipos_hex, Ineg_hex);
@@ -479,25 +486,265 @@ async fn async_main(spawner: Spawner) {
         Ipos_hex = Ipos_hex >> 1;
     }
 
+    ///////////////////////////////////////////////////////////////////
+    /////////////////////////// group 2 ///////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+
+    ///////////DAC 0///////////////////
+    let DAC2_data_pos0: f32 = 1.0; //
+    let DAC2_data_neg0: f32 = -0.8;
+    let DAC2_max_pos0:f32 = 1.0; //0.83
+    let DAC2_max_neg0:f32 = -0.87; //-0.91
+    let mut Ipos2_hex = utils::cur_coding(DAC2_data_pos0, DAC2_max_pos0, DAC2_max_neg0);
+    let mut Ineg2_hex = utils::cur_coding(DAC2_data_neg0, DAC2_max_pos0, DAC2_max_neg0);
+    defmt::info!("DAC0 Ipos hex is 0x{:X}. Ineg_hex is 0x{:X}", Ipos2_hex, Ineg2_hex);
+    reset2.set_low(); //Reset was high all time. Reset to low for at least 1 SCL rising edge. 
+    delay_ms(1);
+    SCL2.set_high(); //first rising edge
+    delay_ms(1);
+    SCL2.set_low();
+    reset2.set_high();
+    delay_us(500); //8 bit data in total. Every clock rising edge, the data was sent.
+    for i in (0..8) {
+        if(Ineg2_hex % 2 == 0){
+            SDA2.set_low();
+            delay_us(500);
+        } else {
+            SDA2.set_high();
+            delay_us(500);
+        }
+        SCL2.set_high();
+        delay_us(500);
+        SCL2.set_low();
+        delay_us(500);
+        Ineg2_hex = Ineg2_hex >> 1;
+    }
+
+    delay_ms(2);
+    polarity_sel2.set_high();//now coding positive DAC
+    reset2.set_low();
+    delay_ms(1);
+    SCL2.set_high(); 
+    delay_ms(1);
+    SCL2.set_low();
+    reset2.set_high();
+    delay_us(500);
+    for i in (0..8) {
+        if(Ipos2_hex % 2 == 0){
+            SDA2.set_low();
+            delay_us(500);
+        } else {
+            SDA2.set_high();
+            delay_us(500);
+        }
+        SCL2.set_high();
+        delay_us(500);
+        SCL2.set_low();
+        delay_us(500);
+        Ipos2_hex = Ipos2_hex >> 1;
+    }
+
+    /////////////////DAC 1 ////////////////////
+
+    let DAC2_data_pos1 = 0.0;
+    let DAC2_data_neg1 = 0.0;
+    let DAC2_max_pos1 = 1.0; //0.48
+    let DAC2_max_neg1:f32 = -1.0; //-0.55
+    Ipos2_hex = utils::cur_coding(DAC2_data_pos1, DAC2_max_pos1, DAC2_max_neg1);
+    Ineg2_hex = utils::cur_coding(DAC2_data_neg1, DAC2_max_pos1, DAC2_max_neg1);
+
+    defmt::info!("DAC1 Ipos hex is 0x{:X}. Ineg_hex is 0x{:X}", Ipos2_hex, Ineg2_hex);
+    delay_ms(2);
+    channel_sel2.set_high();
+    polarity_sel2.set_low();
+    reset2.set_low(); //Reset was high all time. Reset to low for at least 1 SCL rising edge. 
+    delay_ms(1);
+    SCL2.set_high(); //first rising edge
+    delay_ms(1);
+    SCL2.set_low();
+    reset2.set_high();
+    delay_us(500); //8 bit data in total. Every clock rising edge, the data was sent.
+    for i in (0..8) {
+        if(Ineg2_hex % 2 == 0){
+            SDA2.set_low();
+            delay_us(500);
+        } else {
+            SDA2.set_high();
+            delay_us(500);
+        }
+        SCL2.set_high();
+        delay_us(500);
+        SCL2.set_low();
+        delay_us(500);
+        Ineg2_hex = Ineg2_hex >> 1;
+    }
+
+    delay_ms(2);
+    polarity_sel2.set_high();//now coding positive DAC
+    reset2.set_low();
+    delay_ms(1);
+    SCL2.set_high(); 
+    delay_ms(1);
+    SCL2.set_low();
+    reset2.set_high();
+    delay_us(500);
+    for i in (0..8) {
+        if(Ipos2_hex % 2 == 0){
+            SDA2.set_low();
+            delay_us(500);
+        } else {
+            SDA2.set_high();
+            delay_us(500);
+        }
+        // SDA1.set_high();
+        // delay_us(500);
+        SCL2.set_high();
+        delay_us(500);
+        SCL2.set_low();
+        delay_us(500);
+        Ipos2_hex = Ipos2_hex >> 1;
+    }
+
+    ///////////// DAC 2 //////////////////////////
+    let DAC2_data_pos2 = 0.0;
+    let DAC2_data_neg2 = 0.0;
+    let DAC2_max_pos2 = 1.0; //0.48
+    let DAC2_max_neg2:f32 = -1.0; //-0.51
+    Ipos2_hex = utils::cur_coding(DAC2_data_pos2, DAC2_max_pos2, DAC2_max_neg2);
+    Ineg2_hex = utils::cur_coding(DAC2_data_neg2, DAC2_max_pos2, DAC2_max_neg2);
+    defmt::info!("DAC 2 Ipos hex is 0x{:X}. Ineg_hex is 0x{:X}", Ipos2_hex, Ineg2_hex);
+    channel_sel2.set_low();
+    channel_sel3.set_high();
+    reset2.set_low(); //Reset was high all time. Reset to low for at least 1 SCL rising edge. 
+    delay_ms(1);
+    SCL2.set_high(); //first rising edge
+    delay_ms(1);
+    SCL2.set_low();
+    reset2.set_high();
+    delay_us(500); //8 bit data in total. Every clock rising edge, the data was sent.
+    for i in (0..8) {
+        if(Ineg2_hex % 2 == 0){
+            SDA2.set_low();
+            delay_us(500);
+        } else {
+            SDA2.set_high();
+            delay_us(500);
+        }
+        // SDA1.set_low();
+        // delay_us(500);
+        SCL2.set_high();
+        delay_us(500);
+        SCL2.set_low();
+        delay_us(500);
+        Ineg2_hex = Ineg2_hex >> 1;
+    }
+
+    delay_ms(2);
+    polarity_sel2.set_high();//now coding positive DAC
+    reset2.set_low();
+    delay_ms(1);
+    SCL2.set_high(); 
+    delay_ms(1);
+    SCL2.set_low();
+    reset2.set_high();
+    delay_us(500);
+    for i in (0..8) {
+        if(Ipos2_hex % 2 == 0){
+            SDA2.set_low();
+            delay_us(500);
+        } else {
+            SDA2.set_high();
+            delay_us(500);
+        }
+        // SDA1.set_high();
+        // delay_us(500);
+        SCL2.set_high();
+        delay_us(500);
+        SCL2.set_low();
+        delay_us(500);
+        Ipos2_hex = Ipos2_hex >> 1;
+    }
+
+    ///////////////DAC 3 /////////////////
+    let DAC2_data_pos3 = 0.0;
+    let DAC2_data_neg3 = -0.0;
+    let DAC2_max_pos3 = 1.0; //0.46 
+    let DAC2_max_neg3: f32 = -1.0; //-0.35
+    Ipos2_hex = utils::cur_coding(DAC2_data_pos3, DAC2_max_pos3, DAC2_max_neg3);
+    Ineg2_hex = utils::cur_coding(DAC2_data_neg3, DAC2_max_pos3, DAC2_max_neg3);
+    defmt::info!("DAC3 Ipos hex is 0x{:X}. Ineg_hex is 0x{:X}", Ipos2_hex, Ineg2_hex);
+    channel_sel2.set_high();
+    reset2.set_low(); //Reset was high all time. Reset to low for at least 1 SCL rising edge. 
+    delay_ms(1);
+    SCL2.set_high(); //first rising edge
+    delay_ms(1);
+    SCL2.set_low();
+    reset2.set_high();
+    delay_us(500); //8 bit data in total. Every clock rising edge, the data was sent.
+    for i in (0..8) {
+        if(Ineg2_hex % 2 == 0){
+            SDA2.set_low();
+            delay_us(500);
+        } else {
+            SDA2.set_high();
+            delay_us(500);
+        }
+        // SDA1.set_low();
+        // delay_us(500);
+        SCL2.set_high();
+        delay_us(500);
+        SCL2.set_low();
+        delay_us(500);
+        Ineg2_hex = Ineg2_hex >> 1;
+    }
+
+    delay_ms(2);
+    polarity_sel2.set_high();//now coding positive DAC
+    reset2.set_low();
+    delay_ms(1);
+    SCL2.set_high(); 
+    delay_ms(1);
+    SCL2.set_low();
+    reset2.set_high();
+    delay_us(500);
+    for i in (0..8) {
+        if(Ipos2_hex % 2 == 0){
+            SDA2.set_low();
+            delay_us(500);
+        } else {
+            SDA2.set_high();
+            delay_us(500);
+        }
+        // SDA1.set_high();
+        // delay_us(500);
+        SCL2.set_high();
+        delay_us(500);
+        SCL2.set_low();
+        delay_us(500);
+        Ipos2_hex = Ipos2_hex >> 1;
+    }
+
+
     defmt::info!("Data transfer finished!");
     delay_s(3);
 
     // yellow.toggle();
-    // red.toggle();
+    red.toggle();
     green.toggle();
     //blue.toggle();
     
     let mut adc_sum_min: f64 = 5.0;
     let mut adc_sum_max: f64 = 0.0;
     let Ineg_f64:f64 = DAC_data_neg0 as f64;
+    let Ineg2_f64:f64 = DAC2_data_neg0 as f64;
     let mut current_compensation:f64 = 0.0;
 
     let mut array_impedance:[f64; 30] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
-    // let mut array_impedance_fix:[f64; 30] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-    // 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-    // 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+    let mut array_impedance2:[f64; 30] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
     let frequency_divider:[u16; 30] = [50000, 40000, 25000, 20000, 15873, 12500, 10000, 
     6400, 5000, 4000, 2500, 2000, 1587, 1250, 1000,  
     640, 500, 400, 250, 200, 159, 125, 100, 
@@ -512,11 +759,18 @@ async fn async_main(spawner: Spawner) {
     let mut t4 = 50;
     let mut tauRC = 0.0;
 
+    let mut t5 = 100; //negative pulse time. unit is us
+    let mut t6 = 260; //positive pulse time. unit is us 
+    let mut t7 = 150; //charge time. unit is us
+    let mut t8 = 50;
+    let mut tauRC2 = 0.0;
+
+
     let mut i = 0;
     let mut abnormal_counter = 0; 
-    let mut counter1 = 58000;
-    let mut counter2 = 57;
-    let mut minute_count = 57;
+    let mut counter1 = 31700; //31700
+    let mut counter2 = 54; //54
+    let mut minute_count = 54; //54
     let mut first_count = 0;
     let mut margin = 20.0;
 
@@ -526,7 +780,31 @@ async fn async_main(spawner: Spawner) {
         } else {
             t4 = t1 - t3;
         }
+
+        if(t7 > t5){
+            t8 = t7 - t5;
+        } else {
+            t8 = t5 - t7;
+        }
+
+        // s3.set_high();
+        // s7.set_high();
+
         hclk_request(clock::ClockFreqs::KernelFreq160Mhz, ||{
+            // s1.set_high();
+            // s5.set_high();
+            // delay_ms(1);
+            // s1.set_low();
+            // s5.set_low();
+            // delay_ms(1);
+            // s2.set_high();
+            // s6.set_high();
+            // delay_ms(2);
+            // s2.set_low();
+            // s6.set_low();
+            // delay_ms(3);
+
+
             s0.set_high();
             s1.set_high();
             s2.set_high();
@@ -548,21 +826,47 @@ async fn async_main(spawner: Spawner) {
             //delay_tick(1);
             delay_us(t2);
             s3.set_low();
-            delay_us(200);
-        });
-        delay_ms(1);
+            delay_us(100);
 
-        if counter1 >= 60000 {
+            s4.set_high();
+            s5.set_high();
+            s6.set_high();
+
+            if t7 > t5 {
+                delay_us(t5);
+                s6.set_low();
+                delay_us(t8);
+                s5.set_low();
+            }else {
+                delay_us(t7);
+                s5.set_low();
+                delay_us(t8);
+                s6.set_low();
+            }
+
+            delay_us(10);
+            s7.set_high();
+            delay_us(t6);
+            s7.set_low();
+        });
+        s0.set_low();
+        s4.set_low();
+        delay_us(100);
+
+        if counter1 >= 32700 { //32700
             if counter2 >= minute_count {
 
                 TIM3_CH1_PB4.setup();
                 TIM3.enable_output(1);
+                ADC_sel3.set_low();
                 
                 if first_count == 0{
-                        i = 0;
-                    }else {
-                        i = 27;
-                    }
+                    i = 0;
+                    //defmt::info!("First count is 0. i is {}", i);
+                }else {
+                    i = 27;
+                    //defmt::info!("First count is NOT 0. i is {}", i);
+                }
 
                 while i < array_impedance.len(){
                     adc_sum_max = 0.0;
@@ -570,9 +874,6 @@ async fn async_main(spawner: Spawner) {
                     delay_ms(5);     
 
                     TIM3.set_pwm(1, frequency_divider[i], frequency_divider[i]/2);
-                    delay_ms(10);
-                    
-
                     delay_ms(500);
                     for q in 0..1000{ //1000
                         let res1 = tmp_adc.start_conversion_sw(1); 
@@ -588,7 +889,7 @@ async fn async_main(spawner: Spawner) {
                     let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg_f64);
                     if i > 0 && R_measure > (array_impedance[i-1] + margin){
                         abnormal_counter = abnormal_counter + 1; 
-                        defmt::info!("wrong measure, i is {}, R is {}", i, R_measure);
+                        //defmt::info!("wrong measure, i is {}, R is {}", i, R_measure);
                         if abnormal_counter > 2{
                             i = i - 1; 
                             abnormal_counter = 0;
@@ -596,7 +897,7 @@ async fn async_main(spawner: Spawner) {
                     } else if i == array_impedance.len() - 1 && R_measure < array_impedance[i-1] - 50.0{
                         i = i;
                     } else {
-                        defmt::info!("Impedance is {}. i is {}", R_measure, i);
+                        // defmt::info!("Impedance is {}. i is {}", R_measure, i);
                         array_impedance[i] = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg_f64); 
                     //defmt::info!("ADC difference is {} - {} = {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
                         i = i + 1;
@@ -614,27 +915,24 @@ async fn async_main(spawner: Spawner) {
                 // 225.85475956981884];
                 let imp_comp1 = 40.0/DAC_data_neg0 as f64;
                 let imp_comp2 = 50.0/DAC_data_neg0 as f64;
-                if (first_count == 0){
-                    for l in 0..array_impedance.len(){
-                        if l < 23{
-                            array_impedance[l] = array_impedance[l] + imp_comp1;
-                        } 
-                        else {
-                            array_impedance[l] = array_impedance[l] + imp_comp2;
-                        }
+                // if (first_count == 0){
+                //     for l in 0..array_impedance.len(){
+                //         if l < 23{
+                //             array_impedance[l] = array_impedance[l] + imp_comp1;
+                //         } 
+                //         else {
+                //             array_impedance[l] = array_impedance[l] + imp_comp2;
+                //         }
                         
-                    }
-                }
+                //     }
+                // }
                 
-                
-                defmt::info!("Impedance value is {}", array_impedance);
-                delay_s(1);
-                defmt::info!("Impedance value is {}", array_impedance);
-                delay_s(1);
-
-
                 if(first_count == 0){
-                    Rs = (array_impedance[29] + array_impedance[28]+ array_impedance[27])/3.0 - 20.0;
+                    defmt::info!("Impedance value is {}", array_impedance);
+                    delay_s(1);
+                    defmt::info!("Impedance value is {}", array_impedance);
+                    delay_s(1);
+                    Rs = (array_impedance[29] + array_impedance[28]+ array_impedance[27])/3.0 ;
                     Rp = (array_impedance[0] + array_impedance[1])/2.0 - Rs;  
                     (fc, Cp) = utils::capacitor_calculate(&frequency_divider, &array_impedance, Rp, Rs, 0.0);
                     defmt::info!("fc is {:?} Hz", fc);
@@ -643,32 +941,191 @@ async fn async_main(spawner: Spawner) {
                     defmt::info!("Rs is {}, Rp is {}, Cp is {} uF", Rs, Rp, Cp);
                     delay_ms(10);
                 } else {
-                    Rs = (array_impedance[29] + array_impedance[28]+ array_impedance[27])/3.0 - 40.0;
+                    Rs = (array_impedance[29] + array_impedance[28]+ array_impedance[27])/3.0;
                     defmt::info!("New Rs is {}", Rs);
                     delay_ms(10);
                 }
 
-                // Rs = 510.0;
-                // Rp = 510.0;
-                // Cp = 4.7;
                 let t2_f64 = t2 as f64; // unit is us
                 let t3_f64 = t3 as f64; //unit is us
-                let Ineg_f64:f64 = -DAC_data_neg1 as f64; // unit is mA
+                let Ineg_f64:f64 = -DAC_data_neg0 as f64; // unit is mA
 
                 delay_ms(10);
                 tauRC = (Rs * Rp * Cp*1e-6)/(Rs + Rp);
-                let V0: f64 = DAC_data_pos1 as f64* t3_f64 * 0.01; // mA * us / 0.1uF = 0.01
+                let V0: f64 = DAC_data_pos0 as f64* t3_f64 * 0.01; // mA * us / 0.1uF = 0.01
                 let I0 = V0 / (Rs + Rp); // the acutal current is larger? 
                 let mut t1_f64 = (1.0 - exp(t2_f64*1e-6/(-1.0*tauRC)))*I0*tauRC/(Ineg_f64*1e-3)*500000.0 ;
                 t1 = t1_f64 as u32;
                 defmt::info!("t1 is {}", t1);
 
                 s2.setup();
+
+/////////////////////////////// group 2 2DAC /////////////////////////// 
+
+                //////////Need to program the DAC again to send negative pulses.
+                Ineg2_hex = utils::cur_coding(DAC2_data_neg0, DAC2_max_pos0, DAC2_max_neg0);
+                // defmt::info!("For PWM, the neg hex is 0x{:x}", Ineg2_hex);
+                channel_sel2.set_low();
+                channel_sel3.set_low();
+                polarity_sel2.set_high();//now coding positive DAC
+                reset2.set_low();
+                delay_us(100);
+                SCL2.set_high(); 
+                delay_us(100);
+                SCL2.set_low();
+                reset2.set_high();
+                delay_us(100);
+                for i in (0..8) {
+                    if(Ineg2_hex % 2 == 0){
+                        SDA2.set_low();
+                        delay_us(100);
+                    } else {
+                        SDA2.set_high();
+                        delay_us(100);
+                    }
+                    SCL2.set_high();
+                    delay_us(100);
+                    SCL2.set_low();
+                    delay_us(100);
+                    Ineg2_hex = Ineg2_hex >> 1;
+                }
+
+
+                ADC_sel3.set_high();
+                s5.set_high();
+                TIM3_CH4_PB1.setup();
+                TIM3.enable_output(4);
+                
+                if first_count == 0{
+                        i = 0;
+                        //defmt::info!("First count is 0. i is {}", i);
+                    }else {
+                        i = 27;
+                       // defmt::info!("First count is NOT 0. i is {}", i);
+                    }
+
+                while i < array_impedance2.len(){
+                    adc_sum_max = 0.0;
+                    adc_sum_min = 3.0;
+                    delay_ms(5);     
+
+                    TIM3.set_pwm(4, frequency_divider[i], frequency_divider[i]/2);
+                    delay_ms(10);
+                    
+
+                    delay_ms(500);
+                    for q in 0..1000{ //1000
+                        let res1 = tmp_adc.start_conversion_sw(1); 
+                        let vpos1 = res1 as f64 * vref;
+                        if vpos1 > adc_sum_max {
+                            adc_sum_max = vpos1;
+                        }
+                        if vpos1 < adc_sum_min {
+                            adc_sum_min = vpos1;
+                        }
+                    }
+ 
+                    let R_measure = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg2_f64);
+                    if i > 0 && R_measure > (array_impedance2[i-1] + margin){
+                        abnormal_counter = abnormal_counter + 1; 
+                        defmt::info!("wrong measure2, i is {}, R is {}", i, R_measure);
+                        if abnormal_counter > 2{
+                            i = i - 1; 
+                            abnormal_counter = 0;
+                        }
+                    } else if i == array_impedance2.len() - 1 && R_measure < array_impedance2[i-1] - 50.0{
+                        i = i;
+                    } else {
+                        // defmt::info!("Impedance2 is {}. i2 is {}", R_measure, i);
+                        array_impedance2[i] = (adc_sum_max - adc_sum_min) * 1000.0 / (-Ineg2_f64); 
+                    //defmt::info!("ADC difference is {} - {} = {}", adc_sum_max, adc_sum_min, adc_sum_max - adc_sum_min);
+                        i = i + 1;
+                    }
+
+                    delay_ms(10);
+                }
+                TIM3.disable_output(4);
+                s5.set_low();
+                delay_ms(10);
+
+                let imp_comp3 = 40.0/DAC2_data_neg0 as f64;
+                let imp_comp4 = 50.0/DAC2_data_neg0 as f64;
+                // if (first_count == 0){
+                //     for l in 0..array_impedance2.len(){
+                //         if l < 23{
+                //             array_impedance2[l] = array_impedance2[l] + imp_comp3;
+                //         } 
+                //         else {
+                //             array_impedance2[l] = array_impedance2[l] + imp_comp4;
+                //         }
+                        
+                //     }
+                // }
+                
+
+                if(first_count == 0){
+                    defmt::info!("Impedance2 value is {}", array_impedance2);
+                    delay_s(1);
+                    defmt::info!("Impedance2 value is {}", array_impedance2);
+                    delay_s(1);
+                    Rs2 = (array_impedance2[29] + array_impedance2[28]+ array_impedance2[27])/3.0 ;
+                    Rp2 = (array_impedance2[0] + array_impedance2[1])/2.0 - Rs2;  
+                    (fc2, Cp2) = utils::capacitor_calculate(&frequency_divider, &array_impedance2, Rp2, Rs2, 0.0);
+                    defmt::info!("fc2 is {:?} Hz", fc);
+                    defmt::info!("Rs2 is {}, Rp2 is {}, Cp2 is {} uF", Rs2, Rp2, Cp2);
+                    delay_ms(1);
+                    defmt::info!("Rs2 is {}, Rp2 is {}, Cp2 is {} uF", Rs2, Rp2, Cp2);
+                    delay_ms(10);
+                } else {
+                    Rs2 = (array_impedance2[29] + array_impedance2[28]+ array_impedance2[27])/3.0;
+                    defmt::info!("New Rs2 is {}", Rs2);
+                    delay_ms(10);
+                }
+
+
+                let t6_f64 = t6 as f64; // unit is us
+                let t7_f64 = t7 as f64; //unit is us
+                let Ineg2_f64:f64 = -DAC2_data_neg0 as f64; // unit is mA
+
+                delay_ms(10);
+                tauRC2 = (Rs2 * Rp2 * Cp2*1e-6)/(Rs2 + Rp2);
+                let V02: f64 = DAC2_data_pos0 as f64* t7_f64 * 0.01; // mA * us / 0.1uF = 0.01
+                let I02 = V02 / (Rs2 + Rp2); // the acutal current is larger? 
+                let mut t5_f64 = (1.0 - exp(t6_f64*1e-6/(-1.0*tauRC2)))*I02*tauRC2/(Ineg2_f64*1e-3)*500000.0 ;
+                t5 = t5_f64 as u32;
+                defmt::info!("t5 is {}", t5);
+                s7.setup();
+
+                Ipos2_hex = utils::cur_coding(DAC2_data_pos0, DAC2_max_pos0, DAC2_max_neg0);
+                reset2.set_low();
+                delay_us(100);
+                SCL2.set_high(); 
+                delay_us(100);
+                SCL2.set_low();
+                reset2.set_high();
+                delay_us(100);
+                for i in (0..8) {
+                    if(Ipos2_hex % 2 == 0){
+                        SDA2.set_low();
+                        delay_us(100);
+                    } else {
+                        SDA2.set_high();
+                        delay_us(100);
+                    }
+                    SCL2.set_high();
+                    delay_us(100);
+                    SCL2.set_low();
+                    delay_us(100);
+                    Ipos2_hex = Ipos2_hex >> 1;
+                }
+                polarity_sel2.set_low();
                 counter2 = 0;
                 first_count = 1; 
             } else {
                 s2.setup();
+                s7.setup();
                 counter2 = counter2 + 1;
+                // defmt::info!("counter2 is {}", counter2);
             }
             counter1 = 0;
         } 
