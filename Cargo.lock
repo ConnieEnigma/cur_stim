@@ -196,6 +196,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "defmt-rtt"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93d5a25c99d89c40f5676bec8cefe0614f17f0f40e916f98e345dae941807f9e"
+dependencies = [
+ "critical-section",
+ "defmt 1.0.1",
+]
+
+[[package]]
 name = "document-features"
 version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -261,7 +271,7 @@ dependencies = [
 [[package]]
 name = "embassy-sync"
 version = "0.7.2"
-source = "git+https://github.com/embassy-rs/embassy#96a026c73bad2ebb8dfc78e88c9690611bf2cb97"
+source = "git+https://github.com/embassy-rs/embassy#c46a6c2dcf86bd0840ce4ba6034011fdd9f669a8"
 dependencies = [
  "cfg-if",
  "critical-section",
@@ -275,6 +285,9 @@ dependencies = [
 name = "embassy-usb-driver"
 version = "0.1.0"
 source = "git+https://github.com/embassy-rs/embassy?rev=bcebe4c#bcebe4c4d5b597da0b8741916e450c46e6fef06e"
+dependencies = [
+ "defmt 0.3.100",
+]
 
 [[package]]
 name = "embedded-hal"
@@ -533,9 +546,9 @@ checksum = "b328e2cb950eeccd55b7f55c3a963691455dcd044cfb5354f0c5e68d2c2d6ee2"
 
 [[package]]
 name = "semihosting"
-version = "0.1.20"
+version = "0.1.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3e1c7d2b77d80283c750a39c52f1ab4d17234e8f30bca43550f5b2375f41d5f"
+checksum = "5669d73a3503b5d34db3359c8c87d1b33ba68b2630c153e340d106c15a8626a7"
 
 [[package]]
 name = "semver"
@@ -565,6 +578,7 @@ source = "git+https://github.com/embassy-rs/stm32-data-generated?rev=34a338b3fd3
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
+ "defmt 0.3.100",
 ]
 
 [[package]]
@@ -575,9 +589,9 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "syn"
-version = "2.0.110"
+version = "2.0.111"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a99801b5bd34ede4cf3fc688c5919368fea4e4814a4664359503e6015b280aea"
+checksum = "390cc9a294ab71bdb1aa2e99d13be9c753cd2d7bd6560c77118597410c4d2e87"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -607,11 +621,13 @@ dependencies = [
 [[package]]
 name = "u5-lib"
 version = "0.1.0"
-source = "git+https://github.com/chen-gz/stm32u5lib.git?branch=dev#8c6ec0c2c867c9ded53fdcaffb1c2fca0cfb416f"
+source = "git+https://github.com/chen-gz/stm32u5lib.git?branch=dev#e80d617ce015ae2ed7248598ae6e37ec7c03d56b"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "critical-section",
+ "defmt 1.0.1",
+ "defmt-rtt 1.1.0",
  "embassy-executor",
  "embassy-executor-macros 0.6.2",
  "embassy-sync 0.7.2",
@@ -629,7 +645,7 @@ dependencies = [
  "cortex-m",
  "cortex-m-rt",
  "defmt 0.3.100",
- "defmt-rtt",
+ "defmt-rtt 0.4.2",
  "embassy-executor",
  "embassy-sync 0.6.0",
  "libm",
