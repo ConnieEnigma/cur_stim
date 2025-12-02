@@ -1,8 +1,5 @@
-#![feature(noop_waker)]
 #![no_std]
 #![no_main]
-#![feature(type_alias_impl_trait)]
-#![feature(impl_trait_in_assoc_type)]
 #![allow(non_snake_case)]
 #![allow(unused)]
 
@@ -22,12 +19,10 @@ use libm::exp;
 
 use u5_lib::{
     clock::{self, delay_ms, delay_s, delay_us, delay_tick, hclk_request},
-    com_interface::ComInterface,
     exti,
     gpio::{self, GpioPort, TIM3_CH1_PB4, TIM3_CH4_PB1},
     // i2c::{self, I2c},
     low_power::{no_deep_sleep_request, Executor},
-    task,
     tim::{Config, TIM1, TIM3},
     *,
 };
@@ -146,7 +141,7 @@ struct Point {
     y: f64,
 }
 
-#[task]
+#[embassy_executor::task]
 async fn async_main(spawner: Spawner) {
     // be careful, if the dbg is not enabled, but using deep sleep. This framework will not able to connect to chip.
     // stm32cube programmer, stmcubeide can be used to program the chip, then this framework can be used to debug.
