@@ -8,7 +8,7 @@ struct Point {
 /// the input is `val` mA
 pub fn cur_coding(val: f32) -> u16 {
     let ret = val * -200.0;
-    let mut ret: u16 = 1 << 12 + ret as u16;
+    let mut ret: u16 = (1 << 12) + ret as u16;
     return ret;
 }
 

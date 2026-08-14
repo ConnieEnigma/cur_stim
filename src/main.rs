@@ -103,11 +103,12 @@ async fn async_main(spawner: Spawner) {
     tim1_config.prescaler = 10 - 1;
     let _ = TIM1.init(tim1_config);
 
-    clock::set_mco(
-        gpio::GPIO_MCO_PA8,
-        clock::Mcosel::HSE,
-        clock::Mcopre::DIV16,
-    ); //filter cut off clock. which use PA8 as clock output
+    // Conflicts with s6_en on PA8; leave PA8 as GPIO.
+    // clock::set_mco(
+    //     gpio::GPIO_MCO_PA8,
+    //     clock::Mcosel::HSE,
+    //     clock::Mcopre::DIV16,
+    // ); //filter cut off clock. which use PA8 as clock output
 
     defmt::info!("setup led finished!");
 
