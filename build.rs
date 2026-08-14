@@ -1,19 +1,15 @@
 
-use std::env;
-use std::fs::File;
-use std::io::Write;
-
 fn main() {
     // println!("cargo:rustc-link-arg-bins=-Tmemory.x"); // feagure in cortex-m-rt
     println!("cargo:rustc-link-arg-bins=--nmagic");
     println!("cargo:rustc-link-arg-bins=-Tlink.x");
     println!("cargo:rustc-link-arg-bins=-Tdefmt.x");
-    let runner = if cfg!(feature = "stm32u5a5zj") {
-        "probe-rs run --chip STM32U5A5ZJTx"
+    if cfg!(feature = "stm32u5a5zj") {
+        // "probe-rs run --chip STM32U5A5ZJTx"
     } else if cfg!(feature = "stm32u575zi") {
-        "probe-rs run --chip STM32U575ZITxQ"
+        // "probe-rs run --chip STM32U575ZITxQ"
     } else if cfg!(feature = "stm32u575ci") {
-        "probe-rs run --chip STM32U575CIUxQ"
+        // "probe-rs run --chip STM32U575CIUxQ"
     } else {
         panic!("No chip selected");
     };

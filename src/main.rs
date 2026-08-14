@@ -48,7 +48,7 @@ fn switch_led_setup() -> ( gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio:
     let s7_en: gpio::GpioPort = gpio::PB2;
     let DAC_shutdown1: gpio::GpioPort = gpio::PC11;
     let LDAC1: gpio::GpioPort = gpio::PC12;
-    let SPI_CS1: gpio::GpioPort = gpio::PC4;
+    let CS1: gpio::GpioPort = gpio::PC4;
     let CLK1: gpio::GpioPort = gpio::PB6;
     let DIN1: gpio::GpioPort = gpio::PB3;
     let MOSI1: gpio::GpioPort = gpio::PA7;
@@ -72,14 +72,14 @@ fn switch_led_setup() -> ( gpio::GpioPort, gpio::GpioPort, gpio::GpioPort, gpio:
     s7_en.setup();
     DAC_shutdown1.setup();
     LDAC1.setup();
-    SPI_CS1.setup();
+    CS1.setup();
     CLK1.setup();
     DIN1.setup();
     MOSI1.setup();
     SPI_CLK1.setup();
     SPI_CS1.setup();
     
-    (s0, s0_en, s1, s2, s2_en, s3, s3_en, s4, s4_en, s5, s6, s6_en, s7, s7_en, DAC_shutdown1, LDAC1, SPI_CS1, CLK1, DIN1, MOSI1, SPI_CLK1, SPI_CS1)
+    (s0, s0_en, s1, s2, s2_en, s3, s3_en, s4, s4_en, s5, s6, s6_en, s7, s7_en, DAC_shutdown1, LDAC1, CS1, CLK1, DIN1, MOSI1, SPI_CLK1, SPI_CS1)
 
 }
 
@@ -111,7 +111,7 @@ async fn async_main(spawner: Spawner) {
 
     defmt::info!("setup led finished!");
 
-    let (s0, s0_en, s1, s2, s2_en, s3, s3_en, s4, s4_en, s5, s6, s6_en, s7, s7_en, DAC_shutdown1, LDAC1, SPI_CS1, CLK1, DIN1, MOSI1, SPI_CLK1, SPI_CS1) = switch_led_setup();
+    let (s0, s0_en, s1, s2, s2_en, s3, s3_en, s4, s4_en, s5, s6, s6_en, s7, s7_en, DAC_shutdown1, LDAC1, CS1, CLK1, DIN1, MOSI1, SPI_CLK1, SPI_CS1) = switch_led_setup();
     s0.set_low(); 
     s0_en.set_low(); 
     s1.set_low(); 
@@ -128,7 +128,7 @@ async fn async_main(spawner: Spawner) {
     s7_en.set_low(); 
     DAC_shutdown1.set_high();
     LDAC1.set_high();
-    SPI_CS1.set_high();
+    CS1.set_high();
     CLK1.set_low();
     DIN1.set_low();
     MOSI1.set_low();
@@ -138,7 +138,7 @@ async fn async_main(spawner: Spawner) {
     let Ipos = 2.7; // current range is -10mA to +10mA/ 
     let Ineg = -5.4;
     let Ineg_code = utils::cur_coding(Ineg);
-    let Ipos_code = Ipos/20.0 * 65536 as u16;       
+    let Ipos_code = (Ipos/20.0  * 65536.0) as u16;       
 
     for i in 15..0{
             let mut bit = (Ineg_code >> i) & 1;
@@ -179,7 +179,7 @@ async fn async_main(spawner: Spawner) {
             } else {
                 SPI_CLK1.set_high();
                 delay_us(100);
-                CLK1.set_low();
+                SPI_CLK1.set_low();
                 delay_us(100);
             }
     }
@@ -189,7 +189,7 @@ async fn async_main(spawner: Spawner) {
     delay_us(100);
     SPI_CS1.set_low();
 
-     for j in 31..0{
+     for j in 31..0 {
         let mut bit = (DAC_reg_code >> j) & 1;
             if (bit == 1){
                 MOSI1.set_high();
@@ -202,7 +202,7 @@ async fn async_main(spawner: Spawner) {
             } else {
                 SPI_CLK1.set_high();
                 delay_us(100);
-                CLK1.set_low();
+                SPI_CLK1.set_low();
                 delay_us(100);
             }
     }
@@ -217,6 +217,7 @@ async fn async_main(spawner: Spawner) {
         delay_us(100);
         s1.set_low();
     }
+}
 }
 
 
